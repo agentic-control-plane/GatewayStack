@@ -1,7 +1,7 @@
 // packages/explicabl-express/src/webhooks/auth0-log-webhook.ts
 import * as express from "express";
 import type { Request, Response } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 /**
  * Env
@@ -28,32 +28,17 @@ const TOOL_SCOPES = (process.env.TOOL_SCOPES || process.env.REQUIRED_SCOPES || "
 const LOG_WEBHOOK_WINDOW_MS = +(process.env.LOG_WEBHOOK_WINDOW_MS || 60_000); // 1 minute
 const LOG_WEBHOOK_MAX_PER_WINDOW = +(process.env.LOG_WEBHOOK_MAX_PER_WINDOW || 60);
 
-type RateLimitLikeRequest = {
-  ip?: string;
-  get?(header: string): string | string[] | undefined;
-  connection?: { remoteAddress?: string | undefined } | undefined;
-};
-
-function webhookKeyFromReq(req: RateLimitLikeRequest): string {
-  const xf = req.get?.("x-forwarded-for");
-  if (typeof xf === "string") {
-    return xf.split(",")[0].trim();
-  }
-  return (
-    (req.ip as string) ||
-    (req.connection && req.connection.remoteAddress) ||
-    "unknown"
-  );
-}
-
-
 const auth0WebhookLimiter = rateLimit({
   windowMs: LOG_WEBHOOK_WINDOW_MS,
   max: LOG_WEBHOOK_MAX_PER_WINDOW,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: webhookKeyFromReq,
-  validate: { keyGeneratorIpFallback: false },
+  keyGenerator: (req) => {
+    // Strip IPv4-mapped prefix so ::ffff:1.2.3.4 resolves as IPv4, not collapsed IPv6
+    let ip = req.ip || "unknown";
+    if (ip.startsWith("::ffff:")) ip = ip.slice(7);
+    return ipKeyGenerator(ip);
+  },
 });
 
 // bridge the type mismatch between express-rate-limit and this package’s express types
