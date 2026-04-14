@@ -34,13 +34,24 @@ export interface StrippedText {
 //   U+FEFF ZERO WIDTH NO-BREAK SPACE (BOM)
 const INVISIBLE_CHAR_RE = /[\u200B-\u200D\u2060\uFEFF]/;
 
+// Defensive upper bound on the normalization pass. Callers should enforce
+// their own payload-size limits upstream; this cap exists so an oversized
+// input cannot itself turn the O(n) character walk into a DoS vector.
+// PII detection still runs on the full original input — the oversized-
+// input path just skips ZW-normalization rather than iterating.
+const MAX_NORMALIZE_LENGTH = 1_000_000;
+
 export function stripInvisible(input: string): StrippedText {
+  if (input.length > MAX_NORMALIZE_LENGTH) {
+    return { text: input, map: null };
+  }
   if (!INVISIBLE_CHAR_RE.test(input)) {
     return { text: input, map: null };
   }
+  const limit = Math.min(input.length, MAX_NORMALIZE_LENGTH);
   const chars: string[] = [];
   const map: number[] = [];
-  for (let i = 0; i < input.length; i++) {
+  for (let i = 0; i < limit; i++) {
     const code = input.charCodeAt(i);
     if (
       (code >= 0x200b && code <= 0x200d) ||
