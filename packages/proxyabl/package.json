@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "express": "^4.22.0",
-    "express-rate-limit": "^8.2.1",
+    "express-rate-limit": "^8.2.2",
     "@gatewaystack/proxyabl-core": "^0.1.0",
     "@gatewaystack/request-context": "0.0.6"
   },
