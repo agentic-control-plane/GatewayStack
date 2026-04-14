@@ -10,6 +10,7 @@
 // - Passport numbers, driver's license numbers
 
 import type { PiiType, PiiMatch } from "./types.js";
+import { stripInvisible } from "./normalize.js";
 
 interface PiiPattern {
   type: PiiType;
@@ -62,6 +63,13 @@ export function detectPii(
   text: string,
   customPatterns?: Array<{ type: string; pattern: RegExp }>
 ): PiiMatch[] {
+  // Strip zero-width / invisible characters before scanning so an attacker
+  // cannot defeat the regex by inserting them inside PII values (e.g.
+  // `john\u200B@example.com`). Matches found in the stripped form are
+  // reported in ORIGINAL-text coordinates so redaction covers the whole
+  // obfuscated span — including the invisible chars themselves.
+  const { text: scanText, map } = stripInvisible(text);
+
   const matches: PiiMatch[] = [];
   const allPatterns: Array<{ type: string; pattern: RegExp }> = [
     ...BUILTIN_PATTERNS,
@@ -73,12 +81,26 @@ export function detectPii(
     const regex = new RegExp(pattern.source, pattern.flags);
     let match: RegExpExecArray | null;
 
-    while ((match = regex.exec(text)) !== null) {
+    while ((match = regex.exec(scanText)) !== null) {
+      const s = match.index;
+      const e = match.index + match[0].length;
+
+      // Remap to original-text offsets. If no stripping happened, map is
+      // null and offsets are identical to scanText offsets.
+      const originalStart = map ? map[s] : s;
+      const originalEnd = map
+        ? e > s
+          ? map[e - 1] + 1
+          : originalStart
+        : e;
+
       matches.push({
         type: type as PiiType,
-        value: match[0],
-        start: match.index,
-        end: match.index + match[0].length,
+        // Use the original substring so that redaction modes (mask/
+        // remove/placeholder) operate on what was actually in the text.
+        value: map ? text.slice(originalStart, originalEnd) : match[0],
+        start: originalStart,
+        end: originalEnd,
       });
     }
   }

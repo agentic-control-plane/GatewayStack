@@ -1,6 +1,6 @@
 {
   "name": "@gatewaystack/proxyabl",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
   "dependencies": {
     "express": "^4.22.0",
     "express-rate-limit": "^8.2.1",
-    "@gatewaystack/proxyabl-core": "0.0.4",
+    "@gatewaystack/proxyabl-core": "^0.1.0",
     "@gatewaystack/request-context": "0.0.6"
   },
   "devDependencies": {

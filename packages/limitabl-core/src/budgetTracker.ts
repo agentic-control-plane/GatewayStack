@@ -17,6 +17,7 @@ import type {
   UsageRecord,
 } from "./types.js";
 import { resolveKey } from "./rateLimiter.js";
+import { sanitizeCost } from "./sanitize.js";
 
 interface BudgetEntry {
   records: UsageRecord[];
@@ -40,7 +41,8 @@ export class InMemoryBudgetTracker {
   check(key: LimitKey, estimatedCost?: number): BudgetCheckResult {
     const k = resolveKey(key);
     const currentSpend = this.getCurrentSpend(k);
-    const effectiveSpend = currentSpend + (estimatedCost ?? 0);
+    const sanitizedEstimate = sanitizeCost(estimatedCost, "budgetTracker.check");
+    const effectiveSpend = currentSpend + sanitizedEstimate;
 
     if (effectiveSpend > this.config.maxSpend) {
       return {
@@ -69,7 +71,8 @@ export class InMemoryBudgetTracker {
       entry = { records: [] };
       this.budgets.set(k, entry);
     }
-    entry.records.push(usage);
+    const safeCost = sanitizeCost(usage.cost, "budgetTracker.record");
+    entry.records.push(safeCost === usage.cost ? usage : { ...usage, cost: safeCost });
   }
 
   /** Get current spend in the budget period. */

@@ -34,10 +34,21 @@ function getEngine(config: LimitablCoreConfig): LimitablEngine {
 
 function keyFromReq(req: Request): LimitKey {
   const user = (req as any).user;
-  const xf = req.get?.("x-forwarded-for");
-  const ip = xf
-    ? xf.split(",")[0].trim()
-    : (req.ip as string) ?? "unknown";
+
+  // IMPORTANT: rely on Express's `req.ip`, which is safe ONLY when the
+  // application has configured `app.set('trust proxy', N)` correctly for
+  // its deployment (N = number of trusted proxies in front of the server).
+  //
+  // We deliberately do NOT read `X-Forwarded-For` directly: any client can
+  // forge that header, and taking the leftmost entry — as earlier versions
+  // of this middleware did — lets an attacker rotate the rate-limit key
+  // per request (bypass), forge a victim's IP (targeted DoS), or inflate
+  // the in-memory key map (memory growth).
+  //
+  // Operators behind a load balancer must set `trust proxy`; direct-exposed
+  // servers should leave it at its default of false. See:
+  //   https://expressjs.com/en/guide/behind-proxies.html
+  const ip = (req.ip as string) ?? "unknown";
 
   return {
     sub: user?.sub,

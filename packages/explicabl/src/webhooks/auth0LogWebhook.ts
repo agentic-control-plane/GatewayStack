@@ -2,6 +2,7 @@
 import * as express from "express";
 import type { Request, Response } from "express";
 import rateLimit from "express-rate-limit";
+import { timingSafeEqual } from "node:crypto";
 
 /**
  * Env
@@ -9,13 +10,20 @@ import rateLimit from "express-rate-limit";
  * - MGMT_CLIENT_ID
  * - MGMT_CLIENT_SECRET
  * - LOG_WEBHOOK_SECRET     (shared secret for Auth0 Log Streams → "Authorization: Bearer <secret>")
+ *                          REQUIRED. If unset or empty, the webhook returns 503 and refuses all requests.
  * - GOOGLE_CONNECTION_NAME (defaults to "google-oauth2")
  */
 const MGMT_DOMAIN = process.env.MGMT_DOMAIN!;
 const MGMT_CLIENT_ID = process.env.MGMT_CLIENT_ID!;
 const MGMT_CLIENT_SECRET = process.env.MGMT_CLIENT_SECRET!;
-const LOG_WEBHOOK_SECRET = process.env.LOG_WEBHOOK_SECRET || "dev-change-me";
 const GOOGLE_CONNECTION_NAME = process.env.GOOGLE_CONNECTION_NAME || "google-oauth2";
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 // Optional: used to create a client grant with all tool scopes
 const OAUTH_AUDIENCE = process.env.OAUTH_AUDIENCE;
@@ -35,10 +43,12 @@ type RateLimitLikeRequest = {
 };
 
 function webhookKeyFromReq(req: RateLimitLikeRequest): string {
-  const xf = req.get?.("x-forwarded-for");
-  if (typeof xf === "string") {
-    return xf.split(",")[0].trim();
-  }
+  // Rely on Express's `req.ip`, which the application must make trustworthy
+  // by configuring `app.set('trust proxy', N)` for its deployment (N =
+  // number of trusted reverse proxies in front of the server). Reading
+  // `X-Forwarded-For` directly would let any caller pick their own rate-
+  // limit bucket by spoofing the leftmost entry — same footgun we removed
+  // from @gatewaystack/limitabl.
   return (
     (req.ip as string) ||
     (req.connection && req.connection.remoteAddress) ||
@@ -278,20 +288,35 @@ function extractClientIdFromDcrRaw(ev: any): string | null {
 
 // ---- handler ----
 async function handleAuth0LogWebhook(req: Request, res: Response) {
-  // Shared-secret auth
-  // const auth = req.header("authorization") || "";
-  // if (auth !== `Bearer ${LOG_WEBHOOK_SECRET}`) {
-  //   res.status(401).json({ ok: false, error: "unauthorized" });
-  //   return;
-  // }
+  // Read secret lazily so that (a) misconfiguration can't be masked by a
+  // hardcoded default, and (b) simply importing this package (for health
+  // endpoints, logging middleware, etc.) never throws at module load.
+  const secret = process.env.LOG_WEBHOOK_SECRET || "";
+  if (!secret) {
+    console.error(
+      "[auth0-log-webhook] LOG_WEBHOOK_SECRET is not set — refusing all requests. " +
+        "Set a long, random value in the environment before enabling this webhook."
+    );
+    res.status(503).json({
+      ok: false,
+      error: "not_configured",
+      detail: "LOG_WEBHOOK_SECRET must be set to enable this webhook."
+    });
+    return;
+  }
 
-  // Shared-secret auth (supports either Authorization or X-Webhook-Secret)
+  // Shared-secret auth (supports either Authorization: Bearer <secret>
+  // or X-Webhook-Secret: <secret>). Compared in constant time to avoid
+  // leaking the secret via response-timing side channels.
   const auth = req.header("authorization") || "";
   const xSecret = req.header("x-webhook-secret") || "";
 
+  const BEARER = "Bearer ";
+  const authSecret = auth.startsWith(BEARER) ? auth.slice(BEARER.length) : "";
+
   const ok =
-    auth === `Bearer ${LOG_WEBHOOK_SECRET}` ||
-    xSecret === LOG_WEBHOOK_SECRET;
+    (authSecret.length > 0 && timingSafeEqualStr(authSecret, secret)) ||
+    (xSecret.length > 0 && timingSafeEqualStr(xSecret, secret));
 
   if (!ok) {
     res.status(401).json({ ok: false, error: "unauthorized" });

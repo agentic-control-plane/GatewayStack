@@ -99,19 +99,35 @@ resolveAuth(config: AuthModeConfig, context: AuthContext): ResolvedAuth
 ### SSRF Protection
 
 ```ts
-assertUrlSafe(url: URL, config: UrlSafetyConfig): void
+assertUrlSafe(opts: UrlSafetyOptions): Promise<void>
 ```
+
+> **Breaking change in 0.1.0:** `assertUrlSafe` is now async and takes a single options object. The function performs a DNS lookup when the hostname is not an IP literal, so it cannot be synchronous.
 
 Throws if the URL fails any check:
 - Protocol must be HTTPS (unless `allowHttp: true`)
-- Hostname must be in `allowedHosts`
-- IP-literal hosts are blocked if they resolve to private ranges (10.x, 127.x, 192.168.x, etc.)
+- Hostname must be in `allowedHosts` (case-insensitive exact match)
+- IP literals (IPv4 or IPv6) are rejected if they fall in private ranges (10/8, 127/8, 169.254/16, 172.16/12, 192.168/16, 0/8, ::1, fc00::/7, fe80::/10)
+- IPv4-mapped IPv6 (`::ffff:127.0.0.1` and its compressed hex form) is unpacked and checked as IPv4 — an attacker cannot reach loopback by wrapping it in IPv6 syntax
+- **Hostnames are resolved via DNS and every returned A/AAAA is checked against private ranges.** This closes the DNS-rebinding bypass where an allowlisted name resolves to a private IP at fetch time
+
+```ts
+interface UrlSafetyOptions {
+  url: URL;
+  allowedHosts: string[];
+  allowHttp?: boolean;       // default false
+  allowPrivateIps?: boolean; // default false — set only for trusted internal callers
+  resolve?: (host: string) => Promise<Array<{ address: string; family: number }>>; // test seam
+}
+```
 
 ```ts
 sanitizeHeaderValue(value: string): string
 ```
 
 Strips CRLF characters to prevent header injection.
+
+**Known limitation:** there is a small TOCTOU window between `dns.lookup()` and the actual TCP connect in `fetch()`. A response with a very short TTL could flip public→private between those two steps. Closing this fully requires pinning the socket to the validated IP via a custom HTTP agent; tracked as a follow-up.
 
 ### HTTP Execution
 

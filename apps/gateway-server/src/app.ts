@@ -157,12 +157,17 @@ export function buildApp(env: NodeJS.ProcessEnv) {
 
   // -----------------------------
   // Protected area pipeline:
-  // identifiabl → transformabl → limitabl → Handlers
+  // identifiabl → limitabl → transformabl → Handlers
+  //
+  // Order matters for security: identifiabl must run first so req.user.sub is
+  // populated before limitabl derives its rate-limit key. Otherwise limitabl
+  // falls back to IP-based keying, which means authenticated users sharing a
+  // NAT/proxy IP with unauthenticated traffic share a rate-limit bucket.
   // -----------------------------
   app.use(
     "/protected",
-    limitablMiddleware,
     identifiablMiddleware,
+    limitablMiddleware,
     transformablMiddleware
   );
 
