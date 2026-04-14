@@ -1,7 +1,8 @@
 {
   "name": "@gatewaystack/identifiabl-core",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "type": "module",
   "description": "RS256 JWT verification and identity mapping for GatewayStack.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
