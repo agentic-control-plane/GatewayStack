@@ -1234,7 +1234,7 @@ if (PROXY_TARGET_URL) {
     allowedPaths: PROXY_ALLOWED_PATHS,
   });
 
-  toolGatewayRouter.all(`${PROXY_PREFIX}/*`, async (req: Request, res: Response) => {
+  toolGatewayRouter.all(`${PROXY_PREFIX}/*`, toolLimiter, async (req: Request, res: Response) => {
     try {
       const payload = await verifyBearer(req);
       const sub = String(payload.sub || "");
