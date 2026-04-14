@@ -20,7 +20,7 @@
 <p align="center"><strong>Stop shipping AI integrations with shared API keys and no audit trail</strong></p>
 
 <p align="center">
-  <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter">Reference implementation</a> · <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter/blob/main/docs/live-demo.md">Live demo in ChatGPT</a> · <a href="https://gatewaystack.com">gatewaystack.com</a>
+  <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter">Reference implementation</a> · <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter/blob/main/docs/live-demo.md">Live demo in ChatGPT</a> · <a href="https://agenticcontrolplane.com">agenticcontrolplane.com</a>
 </p>
 
 ## The problem
@@ -220,4 +220,4 @@ npm test
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Report issues on [GitHub Issues](https://github.com/davidcrowe/GatewayStack/issues)
 
-For the enterprise and leadership pitch, see [gatewaystack.com](https://gatewaystack.com).
+For the enterprise and leadership pitch, see [agenticcontrolplane.com](https://agenticcontrolplane.com).

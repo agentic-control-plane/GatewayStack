@@ -15,7 +15,7 @@ Verifies RS256 JWTs against a JWKS endpoint and maps them into a normalized `Gat
 
 `@gatewaystack/identifiabl-core` is the low-level verifier behind
 [identifiabl](https://www.npmjs.com/package/identifiabl) and the broader
-[GatewayStack](https://gatewaystack.com) modules.
+[GatewayStack](https://agenticcontrolplane.com) modules.
 
 If you want an opinionated HTTP/middleware layer for Apps SDK / MCP backends,
 start with `identifiabl`. If you just need a small, framework-agnostic verifier
