@@ -157,15 +157,29 @@ export function buildApp(env: NodeJS.ProcessEnv) {
 
   // -----------------------------
   // Protected area pipeline:
-  // identifiabl → limitabl → transformabl → Handlers
+  // preAuthLimiter → identifiabl → limitabl → transformabl → Handlers
   //
-  // Order matters for security: identifiabl must run first so req.user.sub is
-  // populated before limitabl derives its rate-limit key. Otherwise limitabl
-  // falls back to IP-based keying, which means authenticated users sharing a
-  // NAT/proxy IP with unauthenticated traffic share a rate-limit bucket.
+  // Order matters for security:
+  //  1. A generic IP-keyed rate limiter runs first so an attacker cannot
+  //     flood the endpoint with invalid JWTs and exhaust the RSA verify
+  //     path (CPU-expensive) without identity. Generous ceiling — the
+  //     real per-user enforcement happens below in limitabl.
+  //  2. identifiabl verifies the JWT and populates req.user.sub.
+  //  3. limitabl applies the per-identity rate limit. Must run AFTER
+  //     identifiabl so it keys on sub instead of IP (authenticated users
+  //     sharing a NAT/proxy IP with unauthenticated traffic would
+  //     otherwise share a rate-limit bucket).
   // -----------------------------
+  const protectedPreAuthLimiter = rateLimit({
+    windowMs,
+    max: limit * 10, // well above normal volume; per-user limitabl is the real cap
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   app.use(
     "/protected",
+    protectedPreAuthLimiter,
     identifiablMiddleware,
     limitablMiddleware,
     transformablMiddleware
