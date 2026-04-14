@@ -77,6 +77,8 @@ app.use("/api/tools", validatabl({
 }));
 ```
 
+> **Behavior change in 0.2.0:** `validatabl()` throws at factory time if you pass it an empty config (no `requiredPermissions`, no `policies`, no `inputSchema`). The middleware is sold as deny-by-default, and silently allowing every request when misconfigured was the opposite of that promise. Configure at least one check — or use the `requireScope()` / `requirePermissions()` helpers below for simpler route-level guards.
+
 ## How It Works
 
 1. Reads identity from `req.user` (populated by `@gatewaystack/identifiabl`)

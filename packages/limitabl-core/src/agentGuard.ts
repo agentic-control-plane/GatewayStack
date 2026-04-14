@@ -9,6 +9,7 @@
 // - Circuit breaker pattern (stop all tool calls after N consecutive failures)
 
 import type { AgentGuardConfig, AgentGuardResult } from "./types.js";
+import { sanitizeCost } from "./sanitize.js";
 
 const DEFAULT_MAX_TOOL_CALLS = 50;
 const DEFAULT_MAX_WORKFLOW_COST = 1000; // $10 in cents
@@ -87,7 +88,7 @@ export class AgentGuard {
   recordToolCall(workflowId: string, cost: number = 0): void {
     const state = this.getOrCreate(workflowId);
     state.toolCallCount++;
-    state.totalCost += cost;
+    state.totalCost += sanitizeCost(cost, "agentGuard.recordToolCall");
   }
 
   /** End a workflow (clean up state). */

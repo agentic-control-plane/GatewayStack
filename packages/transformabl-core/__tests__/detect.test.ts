@@ -144,4 +144,42 @@ describe("detectPii", () => {
       expect(matches).toHaveLength(0);
     });
   });
+
+  describe("zero-width character bypass", () => {
+    it("detects email with zero-width space inside", () => {
+      const text = "contact john\u200B@example.com for info";
+      const matches = detectPii(text);
+      const emails = matches.filter((m) => m.type === "email");
+      expect(emails).toHaveLength(1);
+    });
+
+    it("detects SSN with zero-width joiner inside", () => {
+      const text = "ssn is 123-\u200D45-6789";
+      const matches = detectPii(text);
+      const ssns = matches.filter((m) => m.type === "ssn");
+      expect(ssns).toHaveLength(1);
+    });
+
+    it("reports match offsets in the ORIGINAL text so redaction covers ZW chars", () => {
+      const text = "contact john\u200B@example.com for info";
+      const [m] = detectPii(text);
+      // The original substring between start and end must include the ZW
+      // char; redaction slices text[start:end], so this is what gets removed.
+      expect(text.slice(m.start, m.end)).toBe("john\u200B@example.com");
+    });
+
+    it("value field preserves the original obfuscated form", () => {
+      const text = "contact john\u200B@example.com";
+      const [m] = detectPii(text);
+      expect(m.value).toBe("john\u200B@example.com");
+    });
+
+    it("clean text is unaffected (fast-path parity)", () => {
+      const text = "contact john@example.com";
+      const [m] = detectPii(text);
+      expect(m.start).toBe(8);
+      expect(m.end).toBe(24);
+      expect(m.value).toBe("john@example.com");
+    });
+  });
 });

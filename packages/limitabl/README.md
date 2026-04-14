@@ -19,6 +19,16 @@ npm install @gatewaystack/limitabl
 - Automatic key resolution from `req.user` (sub > orgId > IP)
 - Re-exports all `@gatewaystack/limitabl-core` classes for direct use
 
+## Behind a proxy / load balancer
+
+> **Behavior change in 0.2.0:** the middleware no longer reads `X-Forwarded-For` directly. It relies on Express's `req.ip`, which is only trustworthy when the application has configured `trust proxy` for its deployment. If you run behind a load balancer or reverse proxy, set:
+>
+> ```ts
+> app.set("trust proxy", 1); // or the number of trusted hops in front of you
+> ```
+>
+> Without this setting, `req.ip` resolves to the proxy's own IP, so all requests through that proxy share a single rate-limit bucket. Prior versions read the leftmost `X-Forwarded-For` value directly — which any caller can forge, letting an attacker rotate the rate-limit key per request or exhaust a victim's bucket. See [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html).
+
 ## Quick Start
 
 ### Basic rate limiting + budget

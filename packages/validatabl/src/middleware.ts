@@ -29,8 +29,31 @@ export interface ValidatablMiddlewareConfig extends DecisionOptions {
  *
  * Reads identity from req.user (populated by identifiabl).
  * Returns 403 with decision details on denial.
+ *
+ * SECURITY: refuses to start if no checks are configured. The underlying
+ * `decision()` primitive returns `allow` when given empty options (it is
+ * a neutral building block), but mounting *this middleware* with no
+ * checks would silently allow all requests — the opposite of the
+ * "deny-by-default" guarantee this package advertises. Configure at
+ * least one of `requiredPermissions`, `policies`, or `inputSchema`.
  */
 export function validatabl(config: ValidatablMiddlewareConfig): RequestHandler {
+  const hasPerms =
+    Array.isArray(config.requiredPermissions) &&
+    config.requiredPermissions.length > 0;
+  const hasPolicies =
+    !!config.policies?.rules && config.policies.rules.length > 0;
+  const hasSchema = config.inputSchema !== undefined;
+
+  if (!hasPerms && !hasPolicies && !hasSchema) {
+    throw new Error(
+      "[validatabl] refusing to mount with no checks configured. " +
+        "Provide at least one of: requiredPermissions (non-empty), " +
+        "policies (with rules), or inputSchema. Mounting empty would " +
+        "allow every request through."
+    );
+  }
+
   return (req: any, res, next) => {
     const identity = {
       sub: req.user?.sub,

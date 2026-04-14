@@ -48,6 +48,15 @@ export interface DecisionOptions {
  * Returns denied on the first failure. All checks are optional —
  * if no checks are configured, the request is allowed.
  *
+ * SECURITY: this primitive is intentionally neutral — empty options
+ * returns `allowed: true` so it composes cleanly with callers that
+ * apply their own defaults. That means `decision(req, {})` is NOT
+ * deny-by-default. Wrapping layers that expose this to user-facing
+ * enforcement (e.g. the `validatabl()` Express middleware) must
+ * reject empty configs themselves; that middleware does so at mount
+ * time. Integrators calling this function directly are responsible
+ * for the same check.
+ *
  * FUTURE WORK:
  * - checkSafety integration (depends on transformabl classification output)
  *   When transformabl adds safety labels to the request context, validatabl

@@ -85,12 +85,21 @@ app.use(explicablLoggingMiddleware(logger));
 
 Optional router that exposes:
 
-- `/health` endpoints  
-- `/webhooks/auth0` for ingesting Auth0 log events  
+- `/health` endpoints
+- `/webhooks/auth0` for ingesting Auth0 log events
 
 ```ts
 app.use("/explicabl", explicablRouter(process.env));
 ```
+
+> **Breaking change in 0.0.7 (security):** both the Auth0 log webhook and the detailed Auth0 health endpoint now require explicit secrets — no hardcoded defaults — and compare them in constant time.
+>
+> | Env var | Purpose | If unset |
+> |---|---|---|
+> | `LOG_WEBHOOK_SECRET` | Authenticates calls to `POST /auth0-log-webhook` (via `Authorization: Bearer <s>` or `X-Webhook-Secret: <s>`) | Webhook returns `503 not_configured` |
+> | `HEALTH_ADMIN_SECRET` | Authenticates calls to `GET /health/auth0` (via `Authorization: Bearer <s>` or `X-Admin-Secret: <s>`) | Endpoint returns `404` (not even acknowledged, to reduce scan signal) |
+>
+> Prior versions shipped with `LOG_WEBHOOK_SECRET` defaulting to `"dev-change-me"` and a publicly-readable `/health/auth0` endpoint that leaked issuer/audience/JWKS URLs and performed outbound Auth0 Management API token requests on every hit (amplification risk). Operators upgrading from 0.0.6 must set both env vars before exposing these endpoints.
 
 ---
 

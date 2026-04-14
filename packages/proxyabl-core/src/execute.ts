@@ -51,11 +51,13 @@ function clampNumber(value: number | undefined, min: number, max: number, fallba
 export async function executeProxyRequest(cfg: ProxyRequestConfig): Promise<ProxyResponse> {
   const url = buildUrl(cfg.baseUrl, cfg.path);
 
-  // SSRF check
-  assertUrlSafe(url, {
+  // SSRF check — async because it resolves DNS to validate every A/AAAA
+  // record against private-IP ranges, closing the hostname-hiding bypass
+  // where an allowlisted name resolves to e.g. 169.254.169.254.
+  await assertUrlSafe({
+    url,
     allowedHosts: cfg.allowedHosts,
     allowHttp: cfg.allowHttp ?? false,
-    blockPrivateIps: true,
   });
 
   const timeoutMs = clampNumber(cfg.timeoutMs, 1_000, 120_000, 10_000);
