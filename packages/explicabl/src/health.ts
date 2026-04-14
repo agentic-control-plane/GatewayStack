@@ -1,6 +1,19 @@
-import { Router, type Request } from "express";
+import { Router, type Request, type RequestHandler } from "express";
 import fetch from "node-fetch";
+import rateLimit from "express-rate-limit";
 import { timingSafeEqual } from "node:crypto";
+
+// Rate-limit the admin health endpoint. Timing-safe compare stops timing
+// attacks on the secret itself, but without per-caller throughput limits
+// an attacker can still brute-force over many requests. 20/min is well
+// above normal operator polling and tight enough to make brute force of
+// a reasonable-entropy secret infeasible.
+const adminHealthLimiter: RequestHandler = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+}) as unknown as RequestHandler;
 
 function timingSafeEqualStr(a: string, b: string): boolean {
   const ab = Buffer.from(a, "utf8");
@@ -41,7 +54,7 @@ export function healthRoutes(env: NodeJS.ProcessEnv) {
     });
   });
 
-  r.get("/auth0", async (req, res) => {
+  r.get("/auth0", adminHealthLimiter, async (req, res) => {
     // Gate behind HEALTH_ADMIN_SECRET. Unauthenticated callers get 404 so
     // the endpoint is not discoverable and cannot be used to amplify
     // outbound requests against Auth0's Management API.
