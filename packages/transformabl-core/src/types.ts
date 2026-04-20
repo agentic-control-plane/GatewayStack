@@ -2,12 +2,26 @@
 
 /** Categories of PII that can be detected. */
 export type PiiType =
+  // Universal
   | "email"
   | "phone"
   | "ssn"
   | "credit_card"
   | "ip_address"
-  | "date_of_birth";
+  | "date_of_birth"
+  // US identifiers (Presidio parity)
+  | "us_bank_number"
+  | "us_itin"
+  | "us_passport"
+  | "us_drivers_license"
+  // International banking
+  | "iban"
+  // Healthcare (HIPAA PHI)
+  | "icd_10"
+  | "icd_9"
+  | "npi"
+  // Financial
+  | "crypto_wallet";
 
 /** A single PII detection match. */
 export interface PiiMatch {
