@@ -25,7 +25,13 @@ interface PiiPattern {
 const BUILTIN_PATTERNS: PiiPattern[] = [
   {
     type: "email",
-    pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    // Quantifiers are bounded to RFC 5321 limits (local ≤64, domain ≤255,
+    // TLD ≤24). The previous unbounded `+…+` form around a single mandatory
+    // `@` was quadratic (O(n²)) — a long alphanumeric run with no `@` made
+    // the engine scan-to-end-then-backtrack from every start position, so a
+    // ~1 MB string of `a`s could block the event loop for minutes (ReDoS).
+    // Bounding the work per start position makes it effectively linear.
+    pattern: /[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,255}\.[a-zA-Z]{2,24}/g,
   },
   {
     type: "phone",
@@ -135,6 +141,15 @@ export function detectPii(
   // obfuscated span — including the invisible chars themselves.
   const { text: scanText, map } = stripInvisible(text);
 
+  // Defense-in-depth against pathological inputs: cap the length we scan.
+  // Even with bounded patterns, running every pattern over an unbounded body
+  // is a DoS lever (this is an agent/LLM gateway — large tool-call payloads
+  // are normal). PII beyond this cap is not scanned; callers handling very
+  // large bodies should chunk. 512 KB comfortably covers real tool I/O.
+  const MAX_SCAN_LENGTH = 512 * 1024;
+  const boundedScanText =
+    scanText.length > MAX_SCAN_LENGTH ? scanText.slice(0, MAX_SCAN_LENGTH) : scanText;
+
   const matches: PiiMatch[] = [];
   const allPatterns: Array<{ type: string; pattern: RegExp }> = [
     ...BUILTIN_PATTERNS,
@@ -146,7 +161,7 @@ export function detectPii(
     const regex = new RegExp(pattern.source, pattern.flags);
     let match: RegExpExecArray | null;
 
-    while ((match = regex.exec(scanText)) !== null) {
+    while ((match = regex.exec(boundedScanText)) !== null) {
       const s = match.index;
       const e = match.index + match[0].length;
 
