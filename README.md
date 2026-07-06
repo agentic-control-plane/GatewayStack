@@ -8,50 +8,33 @@
   </a>
   <img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Cloud%20Run-ready-4285F4" alt="Cloud Run" />
-  <img src="https://img.shields.io/badge/Auth0-RS256-orange" alt="Auth0 RS256" />
-  <a href="https://github.com/davidcrowe/gatewaystack/tree/main/docs/conformance.json">
+  <a href="https://github.com/agentic-control-plane/GatewayStack/tree/main/docs/conformance.json">
     <img
-      src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdavidcrowe%2Fgatewaystack%2Fmain%2Fdocs%2Fconformance.json&query=$.version&label=MCP%2FAuth%20Conformance"
+      src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fagentic-control-plane%2FGatewayStack%2Fmain%2Fdocs%2Fconformance.json&query=$.version&label=MCP%2FAuth%20Conformance"
       alt="MCP Auth Conformance"
     />
   </a>
 </p>
 
-<p align="center"><strong>Stop shipping AI integrations with shared API keys and no audit trail</strong></p>
+<p align="center"><strong>See, price, and control every tool call your AI agents make.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter">Reference implementation</a> · <a href="https://github.com/davidcrowe/gatewaystack-chatgpt-starter/blob/main/docs/live-demo.md">Live demo in ChatGPT</a> · <a href="https://agenticcontrolplane.com">agenticcontrolplane.com</a>
+  <a href="https://agenticcontrolplane.com">agenticcontrolplane.com</a> · <a href="https://agenticcontrolplane.com/data">the data</a> · <a href="https://github.com/agentic-control-plane/acp-install">one-command install</a>
 </p>
 
-## The problem
+GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://agenticcontrolplane.com). It runs in your infrastructure, in the agent's runtime call path, and makes every tool and model call identified, policy-checked, priced, and logged — whatever framework the agent runs on.
 
-AI apps have three actors — user, LLM, and backend — but no shared identity layer. The user authenticates with the LLM, then the LLM calls your backend with a shared API key. Your backend can't tell who the request is for.
+## Install
 
-```
-      Without GatewayStack              With GatewayStack
+Coding agents (Claude Code, Cursor, Codex, OpenClaw) — one command, no code changes:
 
-        USER (Alice)                      USER (Alice)
-           │                                 │
-           │ ✓ Authenticated                 │ ✓ Authenticated
-           ▼                                 ▼
-         LLM                               LLM
-           │                                 │
-           │ ❌ Shared API key               │ ✓ RS256 JWT
-           ▼                                 ▼
-       BACKEND                         GATEWAYSTACK
-           │                          (Verify & Inject)
-           │ ❓ Who is this?                 │
-           │ ❓ What can they do?            │ ✓ X-User-Id, scopes
-                                             ▼
-                                         BACKEND
-                                             │
-                                             │ ✅ Knows: Alice, scopes
-                                             │ ✅ Enforces policy
+```bash
+curl -sf https://agenticcontrolplane.com/install.sh | bash
 ```
 
-GatewayStack sits between the LLM and your backend. It verifies OAuth tokens, enforces per-user policies, and injects verified identity — so every AI request is attributable, authorized, and auditable. [Full explanation →](docs/three-party-problem.md)
+First controlled call in about thirty seconds. The script documents [what it does and won't do](https://github.com/agentic-control-plane/acp-install).
 
-## Quickstart
+Your own framework code — drop in a package:
 
 ```bash
 npm install @gatewaystack/identifiabl express
@@ -75,11 +58,19 @@ app.get("/api/me", (req, res) => {
 app.listen(8080);
 ```
 
-Every request now requires a valid RS256 JWT. `req.user` contains the verified identity.
+Every request now requires a valid RS256 JWT. `req.user` is the verified identity.
+
+## What you get
+
+- **Cost X-ray.** Every call priced. Runs split into the orchestration loop vs the leaf sub-tasks, so you can see which step is the bill and move the cheap, bounded work to a cheaper model.
+- **Tool-surface control.** Allow / ask / redact / deny, per operation, scoped by agent, role, or user. Deny-by-default on the destructive stuff. Enforced at the call, outside the model — a prompt-injected agent can't talk its way past it.
+- **Audit.** Every tool and model call logged: who triggered it, which agent, what it returned, what it cost, how long it took. Attributable and exportable.
+
+Every number we publish is metered from our own production workspaces, not estimated: [agenticcontrolplane.com/data](https://agenticcontrolplane.com/data).
 
 ## Modules
 
-All six governance layers are live on npm. Each has a `-core` package (framework-agnostic) and an Express middleware wrapper. [Detailed breakdown →](docs/packages.md)
+Each layer ships as a framework-agnostic `-core` package plus an Express middleware wrapper. Use one or all. [Detailed breakdown →](docs/packages.md)
 
 | Module | npm | What it does |
 |--------|-----|-------------|
@@ -154,28 +145,15 @@ app.listen(8080, () => {
 Or clone and run the reference gateway directly:
 
 ```bash
-git clone https://github.com/davidcrowe/GatewayStack
+git clone https://github.com/agentic-control-plane/GatewayStack
 cd GatewayStack
 npm install
 npm run dev   # gateway on :8080, admin UI on :5173
 ```
 
-## GatewayStack vs traditional API gateways
+## Why this is a separate layer
 
-| Feature | Kong / Apigee / AWS API Gateway | GatewayStack |
-|---------|--------------------------------|--------------|
-| JWT validation | Built-in | Built-in |
-| Rate limiting | Built-in | Built-in |
-| Path/method routing | Built-in | Built-in |
-| User identity normalization | Manual (custom plugin) | Built-in |
-| Three-party identity binding (LLM → backend) | Manual (custom logic) | Built-in |
-| Per-tool scope enforcement | Manual (custom policy) | Built-in |
-| PII detection & redaction | Not available | Built-in |
-| Content safety classification | Not available | Built-in |
-| Pre-flight budget checks | Manual (custom plugin) | Built-in |
-| Agent runaway prevention | Not available | Built-in |
-| Apps SDK / MCP compliance | Manual (PRM endpoint) | Built-in |
-| AI audit trails | Manual (log forwarding) | Built-in |
+AI apps have three actors — user, LLM, backend — and no shared identity layer. The backend sees a service token, not a person, so it can't tell who the agent is acting for, whether the action was authorized, or what it cost. GatewayStack closes that gap at the tool-call boundary. [The full argument →](docs/three-party-problem.md)
 
 ## Repository layout
 
@@ -214,10 +192,17 @@ npm test
 - [Troubleshooting](docs/troubleshooting.md)
 - [Production Checklist](docs/production-checklist.md)
 
+## Related repos
+
+- [acp-install](https://github.com/agentic-control-plane/acp-install) — the one-command installer for coding agents and MCP clients
+- [acp-governance-sdks](https://github.com/agentic-control-plane/acp-governance-sdks) — TypeScript + Python SDKs for scoped subagents and delegation chains
+- [delegation-chain-spec](https://github.com/agentic-control-plane/delegation-chain-spec) — ADCS, the open spec for agent-to-agent delegation
+- [agentgovbench](https://github.com/agentic-control-plane/agentgovbench) — 48-scenario benchmark across agent runtimes
+
 ## Contributing
 
 - Run the tests: `npm test`
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Report issues on [GitHub Issues](https://github.com/davidcrowe/GatewayStack/issues)
+- Report issues on [GitHub Issues](https://github.com/agentic-control-plane/GatewayStack/issues)
 
-For the enterprise and leadership pitch, see [agenticcontrolplane.com](https://agenticcontrolplane.com).
+GatewayStack is the runtime. The hosted console — dashboard, team management, cost X-ray, policy UI — is [Agentic Control Plane](https://agenticcontrolplane.com). Free for individuals.
