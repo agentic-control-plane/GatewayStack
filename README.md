@@ -22,7 +22,11 @@
   <a href="https://agenticcontrolplane.com">agenticcontrolplane.com</a> · <a href="https://agenticcontrolplane.com/data">the data</a> · <a href="https://github.com/agentic-control-plane/acp-install">one-command install</a>
 </p>
 
-GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://agenticcontrolplane.com). It runs in your infrastructure, in the agent's runtime call path, and makes every tool and model call identified, policy-checked, priced, and logged — whatever framework the agent runs on.
+GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://agenticcontrolplane.com). It runs in your infrastructure, in the agent's runtime call path, and makes every tool and model call identified, policy-checked, and logged — whatever framework the agent runs on.
+
+> **Which one do I want?**
+> **GatewayStack (this repo)** is the runtime: MIT-licensed npm modules — identity, policy, limits, PII redaction, audit — you compose into your own gateway and run yourself. No account, no phone-home.
+> **Agentic Control Plane** is the hosted product built on it: the console, the priced cost X-ray, team policy UI, approvals — [free for individuals](https://cloud.agenticcontrolplane.com). Most people start there and reach for this repo when they want the enforcement layer in their own infra.
 
 ## Install
 
@@ -33,6 +37,12 @@ curl -sf https://agenticcontrolplane.com/install.sh | bash
 ```
 
 First controlled call in about thirty seconds. The script documents [what it does and won't do](https://github.com/agentic-control-plane/acp-install).
+
+Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolplane.com/integrations/hermes)):
+
+```bash
+pip install hermes-acp && hermes plugins enable acp
+```
 
 Your own framework code — drop in a package:
 
@@ -62,7 +72,7 @@ Every request now requires a valid RS256 JWT. `req.user` is the verified identit
 
 ## What you get
 
-- **Cost X-ray.** Every call priced. Runs split into the orchestration loop vs the leaf sub-tasks, so you can see which step is the bill and move the cheap, bounded work to a cheaper model.
+- **Cost control.** Budget caps and rate limits enforced per call (`limitabl`), with every call's usage logged and attributable. The priced cost X-ray — runs split into the orchestration loop vs leaf sub-tasks, per-model spend — is the [hosted console](https://agenticcontrolplane.com/cost-tracking) built on this telemetry.
 - **Tool-surface control.** Allow / ask / redact / deny, per operation, scoped by agent, role, or user. Deny-by-default on the destructive stuff. Enforced at the call, outside the model — a prompt-injected agent can't talk its way past it.
 - **Audit.** Every tool and model call logged: who triggered it, which agent, what it returned, what it cost, how long it took. Attributable and exportable.
 
@@ -173,7 +183,7 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 npm test
 ```
 
-135 tests across 17 test files covering all five core packages.
+185 tests across 17 test files covering all six core packages.
 
 ## Prerequisites
 
@@ -197,6 +207,7 @@ npm test
 - [acp-install](https://github.com/agentic-control-plane/acp-install) — the one-command installer for coding agents and MCP clients
 - [acp-governance-sdks](https://github.com/agentic-control-plane/acp-governance-sdks) — TypeScript + Python SDKs for scoped subagents and delegation chains
 - [delegation-chain-spec](https://github.com/agentic-control-plane/delegation-chain-spec) — ADCS, the open spec for agent-to-agent delegation
+- [hermes-acp-plugin](https://github.com/agentic-control-plane/hermes-acp-plugin) — the pip-installed governance plugin for Nous Research's Hermes Agent
 - [agentgovbench](https://github.com/agentic-control-plane/agentgovbench) — 48-scenario benchmark across agent runtimes
 
 ## Contributing
