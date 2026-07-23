@@ -30,12 +30,12 @@ npm install @gatewaystack/identifiabl
 
 ```typescript
 import express from 'express';
-import { createIdentifiablMiddleware } from '@gatewaystack/identifiabl';
+import { identifiabl } from '@gatewaystack/identifiabl';
 
 const app = express();
 
 // Add identity verification to all routes
-app.use(createIdentifiablMiddleware({
+app.use(identifiabl({
   issuer: 'https://your-tenant.auth0.com/',
   audience: 'https://gateway.local/api',
   jwksUri: 'https://your-tenant.auth0.com/.well-known/jwks.json'
@@ -59,7 +59,7 @@ app.get('/api/data', (req, res) => {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 // Protected routes (auth required)
-app.use('/protected', createIdentifiablMiddleware({
+app.use('/protected', identifiabl({
   issuer: process.env.OAUTH_ISSUER,
   audience: process.env.OAUTH_AUDIENCE,
   jwksUri: process.env.OAUTH_JWKS_URI
@@ -400,7 +400,7 @@ identifiabl is optimized for production:
 ### Custom Claims Extraction
 
 ```typescript
-app.use(createIdentifiablMiddleware({
+app.use(identifiabl({
   issuer: process.env.OAUTH_ISSUER,
   audience: process.env.OAUTH_AUDIENCE,
   jwksUri: process.env.OAUTH_JWKS_URI,
@@ -418,7 +418,7 @@ app.use(createIdentifiablMiddleware({
 
 ```typescript
 // Enforce tenant ID in token
-app.use(createIdentifiablMiddleware({
+app.use(identifiabl({
   issuer: process.env.OAUTH_ISSUER,
   audience: process.env.OAUTH_AUDIENCE,
   jwksUri: process.env.OAUTH_JWKS_URI,
