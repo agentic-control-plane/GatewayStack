@@ -107,7 +107,7 @@ Run the full test suite:
 npm test
 ```
 
-This runs Vitest plus the conformance report writer that updates `docs/conformance.json`.
+This runs the Vitest suite across the gateway and core packages.
 
 For detailed testing workflows, see:
 - `docs/testing.md` — `/__test__/echo` routes, scope checks, proxy validation
@@ -126,7 +126,7 @@ For detailed testing workflows, see:
 Toggles worth noting:
 
 - `DEMO_MODE=true` swaps in `OAUTH_*_DEMO` overrides so demos can mint JWTs locally.
-- `ENABLE_TEST_ROUTES=true` + `TOOL_SCOPE_ALLOWLIST_JSON` expose `/__test__/echo` for conformance runs.
+- `ENABLE_TEST_ROUTES=true` + `TOOL_SCOPE_ALLOWLIST_JSON` expose `/__test__/echo` for scope/proxy validation runs.
 - `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` tune limitabl without editing TypeScript.
 - `.env.example` plus `apps/gateway-server/.env.example` enumerate every knob.
 

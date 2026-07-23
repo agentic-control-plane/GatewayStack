@@ -54,7 +54,7 @@ Run the full test suite:
 npm test
 ```
 
-This runs Vitest plus the conformance report writer. See `docs/testing.md` for:
+This runs the Vitest suite. See `docs/testing.md` for:
 - `/__test__/echo` routes
 - Scope/RBAC parity checks
 - Proxy + echo server validation

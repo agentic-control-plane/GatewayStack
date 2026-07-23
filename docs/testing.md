@@ -3,7 +3,7 @@
 This document covers:
 - How to enable internal `/__test__` routes
 - Scope/RBAC parity checks
-- Vitest + conformance report
+- Running the Vitest suite
 
 ---
 
@@ -21,7 +21,7 @@ These routes are guarded by:
 - `TOOL_SCOPE_ALLOWLIST_JSON` (allowed scopes per test route)
 - The `X-Required-Scope` header (per-request scope requirement you pass in curl)
 
-They are for validation and conformance testing only, not for production traffic.
+They are for validation and scope/proxy testing only, not for production traffic.
 
 ---
 
@@ -95,12 +95,10 @@ npm test
 
 This runs:
 - Vitest against the gateway and core packages (see `vitest.config.mts`)
-- The conformance report writer, which emits a summary of MCP/Auth OAuth behavior into `docs/conformance.json`
 
 **Key files:**
 - `package.json` → test script
 - `vitest.config.mts` → shared test config
 - `tests/smoke.test.ts` → placeholder smoke test
-- `packages/explicabl-core/src/reporting/saveReport.ts` → writes the conformance report artifact
 
 ---

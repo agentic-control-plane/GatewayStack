@@ -8,12 +8,6 @@
   </a>
   <img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Cloud%20Run-ready-4285F4" alt="Cloud Run" />
-  <a href="https://github.com/agentic-control-plane/GatewayStack/tree/main/docs/conformance.json">
-    <img
-      src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fagentic-control-plane%2FGatewayStack%2Fmain%2Fdocs%2Fconformance.json&query=$.version&label=MCP%2FAuth%20Conformance"
-      alt="MCP Auth Conformance"
-    />
-  </a>
 </p>
 
 <p align="center"><strong>See, price, and control every tool call your AI agents make.</strong></p>
@@ -175,7 +169,7 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 | `demos/` | MCP issuer + ChatGPT Apps SDK connectors that mint demo JWTs |
 | `tools/` | Echo server, mock tool backend, Cloud Run deploy helper |
 | `tests/` | Vitest smoke tests |
-| `docs/` | Auth0 walkthroughs, conformance output, endpoint references, troubleshooting |
+| `docs/` | Auth0 walkthroughs, endpoint references, troubleshooting |
 
 ## Testing
 

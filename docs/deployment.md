@@ -71,11 +71,11 @@ docker run -p 8080:8080 \
 
 ### CI/CD
 
-`.github/workflows/conformance.yml` runs `npm test` and updates `docs/conformance.json` on every push to main.
+`.github/workflows/build.yml` builds the monorepo and runs `npm test` on every push and pull request to main.
 
 **To add deployment:**
 ```yaml
-# Add to conformance.yml after tests pass
+# Add to build.yml after tests pass
 - name: Deploy to Cloud Run
   if: github.ref == 'refs/heads/main'
   run: ./tools/deploy/cloud-run.sh apps/gateway-server
