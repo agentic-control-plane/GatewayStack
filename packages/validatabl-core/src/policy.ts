@@ -25,10 +25,32 @@ import { getScopeStringFromClaims } from "./scopes.js";
  * - Modification actions (strip fields, downgrade model, reduce token limits)
  *   beyond simple allow/deny
  */
+/**
+ * Reject structurally-unsafe rules. A rule with no conditions matches EVERY
+ * request (`[].every()` is vacuously true) — an `allow` rule with empty
+ * conditions is a blanket allow-all that silently defeats deny-by-default.
+ * Throws on the first offending rule so a misconfigured policy set fails loudly
+ * at load rather than quietly widening. Call this once when policies are
+ * loaded; applyPolicies also calls it defensively.
+ */
+export function validatePolicySet(policySet: PolicySet): void {
+  for (const rule of policySet.rules) {
+    if (!Array.isArray(rule.conditions) || rule.conditions.length === 0) {
+      throw new Error(
+        `Invalid policy rule "${rule.id ?? "<no id>"}": a rule must have at ` +
+          `least one condition (an empty condition list matches every request). ` +
+          `Use an explicit catch-all condition or set defaultEffect instead.`
+      );
+    }
+  }
+}
+
 export function applyPolicies(
   policySet: PolicySet,
   request: PolicyRequest
 ): PolicyDecision {
+  validatePolicySet(policySet);
+
   const sorted = [...policySet.rules].sort(
     (a, b) => (a.priority ?? 100) - (b.priority ?? 100)
   );
@@ -82,20 +104,31 @@ function matchesCondition(
     }
 
     case "in": {
-      // value is an array; check if fieldValue is in it
-      if (Array.isArray(condition.value)) {
-        return condition.value.includes(String(fieldValue));
-      }
-      return false;
+      // value is an array; check if fieldValue is one of its members.
+      // Strict: no String() coercion. Coercing let an array field stringify to
+      // "a,b" and an object to "[object Object]", so unrelated values slipped
+      // past an `in` allow-list. Only a string field can be a member; anything
+      // else does not match.
+      if (!Array.isArray(condition.value)) return false;
+      if (typeof fieldValue !== "string") return false;
+      return condition.value.includes(fieldValue);
     }
 
     case "matches": {
-      // value is a regex pattern
+      // value is a regex pattern. Anchor by default: a bare pattern like
+      // "search" used to substring-match, so it silently allowed
+      // "unsafe-search-exec" — an unanchored match widens every policy. A bare
+      // pattern is now wrapped in ^(?:…)$ (exact whole-string match). An author
+      // who wrote their own anchor ("^gpt-4" for a prefix/family match) has
+      // expressed intent, so we honor it verbatim rather than double-anchor.
       if (typeof fieldValue !== "string" || typeof condition.value !== "string") {
         return false;
       }
+      const raw = condition.value;
+      const authored = raw.startsWith("^") || raw.endsWith("$");
+      const source = authored ? raw : `^(?:${raw})$`;
       try {
-        return new RegExp(condition.value).test(fieldValue);
+        return new RegExp(source).test(fieldValue);
       } catch {
         return false;
       }

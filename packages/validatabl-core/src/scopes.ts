@@ -23,10 +23,14 @@ export function getScopeStringFromClaims(claims: ScopeClaims): string {
 
 /**
  * Check whether a given scope is present in the user's scopes.
+ *
+ * Membership is an exact, whitespace-delimited token match — never a regex.
+ * Building a `RegExp` from the caller's scope string (the old implementation)
+ * meant a required scope containing regex metacharacters either widened the
+ * check (`tool.write` matched `toolXwrite` because `.` is "any char") or threw
+ * on an unbalanced metachar and 500'd the request.
  */
 export function hasScope(claims: ScopeClaims, scope: string): boolean {
-  const s = getScopeStringFromClaims(claims);
-  if (!s) return false;
-  const pattern = new RegExp(`(^|\\s)${scope}(\\s|$)`);
-  return pattern.test(s);
+  if (!scope) return false;
+  return getScopeStringFromClaims(claims).split(/\s+/).includes(scope);
 }

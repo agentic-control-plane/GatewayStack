@@ -74,8 +74,21 @@ export class LimitablEngine {
       }
     }
 
-    // Agent guard check
-    if (this.agentGuard && opts?.workflowId) {
+    // Agent guard check.
+    //
+    // If the operator configured an agent guard, it must run. The old code
+    // only ran it when a workflowId was supplied, so a client could opt out of
+    // runaway protection entirely by simply omitting the id — deny instead when
+    // the guard is configured but no key resolves.
+    if (this.agentGuard) {
+      if (!opts?.workflowId) {
+        return {
+          allowed: false,
+          reason:
+            "Agent guard is enabled but no workflow key resolved for this " +
+            "request; refusing rather than running unguarded.",
+        };
+      }
       const guard = this.agentGuard.check(opts.workflowId);
       if (!guard.allowed) {
         return {
