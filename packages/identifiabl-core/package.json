@@ -13,7 +13,9 @@
     "directory": "packages/identifiabl-core"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -21,5 +23,8 @@
   },
   "dependencies": {
     "jose": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

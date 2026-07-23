@@ -15,7 +15,6 @@
     "LICENSE"
   ],
   "dependencies": {
-    "jose": "^5.0.0",
     "@gatewaystack/identifiabl-core": "^0.1.0",
     "@gatewaystack/request-context": "^0.0.6"
   },
@@ -25,5 +24,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
