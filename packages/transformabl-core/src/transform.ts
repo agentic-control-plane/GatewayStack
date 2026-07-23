@@ -3,7 +3,7 @@
 // Full transformation pipeline: detect → classify → redact → extract metadata.
 
 import type { TransformConfig, TransformResult } from "./types.js";
-import { detectPii } from "./detect.js";
+import { detectPiiDetailed } from "./detect.js";
 import { redactPii } from "./redact.js";
 import { classifyContent } from "./classify.js";
 import { extractMetadata } from "./metadata.js";
@@ -23,7 +23,8 @@ export function transformContent(
   config?: TransformConfig
 ): TransformResult {
   // 1. Detect PII
-  const piiMatches = detectPii(content, config?.customPatterns);
+  const detection = detectPiiDetailed(content, config?.customPatterns);
+  const piiMatches = detection.matches;
 
   // 2. Classify
   const classification =
@@ -54,5 +55,6 @@ export function transformContent(
     classification,
     metadata,
     transformed: redacted !== content,
+    scanTruncated: detection.scanTruncated,
   };
 }
