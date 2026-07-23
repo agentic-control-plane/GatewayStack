@@ -1,6 +1,6 @@
 {
   "name": "@gatewaystack/explicabl",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -17,6 +17,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "express": "^4.22.0",

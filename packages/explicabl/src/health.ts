@@ -1,5 +1,4 @@
 import { Router, type Request, type RequestHandler } from "express";
-import fetch from "node-fetch";
 import rateLimit from "express-rate-limit";
 import { timingSafeEqual } from "node:crypto";
 
