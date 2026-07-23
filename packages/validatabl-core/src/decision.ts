@@ -98,7 +98,15 @@ export function decision(
   }
 
   // 3. Schema validation
-  if (options.inputSchema && request.input !== undefined) {
+  //
+  // When a schema is configured it MUST run, even when input is absent. The
+  // old `&& request.input !== undefined` guard skipped validation for requests
+  // with no parsed body (GET, wrong content-type, parse failure) — so a schema
+  // meant to gate a route was silently a no-op and the request passed. That is
+  // fail-open. `checkSchema(undefined, schema)` denies (an object schema fails
+  // "Expected an object"; required fields report missing), which is the
+  // correct answer for "schema required, input missing."
+  if (options.inputSchema) {
     const schemaResult = checkSchema(request.input, options.inputSchema);
     checks.schema = schemaResult;
     if (!schemaResult.valid) {

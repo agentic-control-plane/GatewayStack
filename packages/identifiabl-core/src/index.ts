@@ -151,6 +151,23 @@ export function createIdentifiablVerifier(
 ): (token: string) => Promise<VerifyResult> {
   const issuerNoSlash = trimTrailingSlashes(config.issuer);
   const audience = config.audience;
+
+  // Reject a misconfigured verifier at construction rather than minting one
+  // that silently accepts tokens. An empty issuer makes the post-verify issuer
+  // check pass for `iss: ""`; an empty/absent audience disables audience
+  // binding in jose, so a token minted for any audience would verify.
+  if (!issuerNoSlash) {
+    throw new Error("identifiabl: config.issuer is required and must be non-empty");
+  }
+  const audienceEmpty =
+    audience === undefined ||
+    audience === null ||
+    (typeof audience === "string" && audience.trim() === "") ||
+    (Array.isArray(audience) && audience.filter((a) => String(a).trim()).length === 0);
+  if (audienceEmpty) {
+    throw new Error("identifiabl: config.audience is required and must be non-empty");
+  }
+
   const jwksUri =
     config.jwksUri || `${issuerNoSlash}/.well-known/jwks.json`;
 
@@ -161,7 +178,11 @@ export function createIdentifiablVerifier(
       const { payload } = await jwtVerify(token, JWKS, {
         audience,
         algorithms: ["RS256"],
-        clockTolerance: "60s"
+        clockTolerance: "60s",
+        // Require an expiry. Without this, jose accepts a token that simply
+        // omits `exp` — a token that never expires. `exp` is then enforced by
+        // jose's own clock check (with the tolerance above).
+        requiredClaims: ["exp"],
       });
 
       const iss = String(payload.iss || "");

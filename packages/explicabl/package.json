@@ -19,6 +19,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@gatewaystack/request-context": "^0.0.6",
     "express": "^4.22.0",
     "express-rate-limit": "^8.2.2"
   },

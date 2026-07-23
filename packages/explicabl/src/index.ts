@@ -7,6 +7,7 @@ import {
   type NextFunction,
   type RequestHandler,
 } from "express";
+import { getGatewayContext } from "@gatewaystack/request-context";
 import { healthRoutes } from "./health.js";
 import { auth0LogsWebhook } from "./webhooks/auth0LogWebhook.js";
 
@@ -87,26 +88,58 @@ export function createConsoleLogger(
  * It is intentionally defensive: if no context is present, it still logs
  * method/path/status/latency.
  */
+let warnedNoContext = false;
+
 export function explicablLoggingMiddleware(
   logger: ExplicablLogger,
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     const startedAt = Date.now();
 
-    res.on("finish", () => {
-      const latencyMs = Date.now() - startedAt;
+    // Capture the ambient GatewayContext reference now, while we are inside the
+    // request's async-local-storage scope. Later layers (identifiabl, etc.)
+    // mutate this same object in place, so the reference sees their updates —
+    // and reading it here means we still have it if ALS has unwound by the time
+    // the response settles.
+    const capturedContext = getGatewayContext();
 
-      // Try a few common places where you might stash requestId/context.
+    // Emit exactly one event whether the response finishes normally or the
+    // connection is aborted. `finish` fires on a completed response; `close`
+    // fires on client abort/socket close and used to emit nothing at all — so
+    // aborted requests left no audit trail. The guard makes them mutually
+    // exclusive.
+    let emitted = false;
+    const emit = () => {
+      if (emitted) return;
+      emitted = true;
+
+      const latencyMs = Date.now() - startedAt;
       const locals: any = res.locals ?? {};
       const requestId: string | undefined =
         (locals.requestId as string | undefined) ??
         (locals.reqId as string | undefined) ??
         (req.headers["x-request-id"] as string | undefined);
 
+      // Identity lives in the GatewayContext (ALS), not res.locals — the old
+      // `res.locals.gatewayContext` read was always undefined, so every audit
+      // line logged `context: undefined`. Prefer the live context, fall back to
+      // the captured reference, then res.locals for back-compat.
       const context: unknown =
+        getGatewayContext() ??
+        capturedContext ??
         locals.gatewayContext ??
         locals.context ??
         undefined;
+
+      if (context === undefined && !warnedNoContext) {
+        warnedNoContext = true;
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[explicabl] no GatewayContext found on the request — audit events " +
+            "will carry no identity. Ensure runWithGatewayContext() wraps the " +
+            "request before this middleware.",
+        );
+      }
 
       const event: ExplicablEvent = {
         ts: new Date().toISOString(),
@@ -128,7 +161,10 @@ export function explicablLoggingMiddleware(
         // eslint-disable-next-line no-console
         console.error("[explicabl:logger_error]", err);
       }
-    });
+    };
+
+    res.on("finish", emit);
+    res.on("close", emit);
 
     next();
   };
@@ -149,12 +185,12 @@ export function explicablRouter(env: NodeJS.ProcessEnv): RequestHandler {
   // Health routes (public)
   r.use(healthRoutes(env) as unknown as RequestHandler);
 
-  // Webhooks (auth0 logs, etc.)
-  // NOTE: auth0LogsWebhook is already a RequestHandler in your current code,
-  // so we do NOT call it as a function here.
-  // NOTE: auth0LogsWebhook is already a RequestHandler in your current code,
-  // so we do NOT call it as a function here.
-  r.use("/webhooks/auth0", auth0LogsWebhook as unknown as RequestHandler);
+  // Webhooks (auth0 logs, etc.).
+  // auth0LogsWebhook is a FACTORY that returns the handler — it must be called.
+  // Mounting the factory itself made Express invoke it as (req, res, next); it
+  // returned a value and never called next(), so every request to this path
+  // hung forever and the webhook was effectively dead.
+  r.use("/webhooks/auth0", auth0LogsWebhook());
 
   // Important: cast router to RequestHandler
   return r as unknown as RequestHandler;
