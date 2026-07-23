@@ -30,7 +30,13 @@ GatewayStack ships as composable npm packages. Each governance layer has a `-cor
 
 `@gatewaystack/proxyabl-core` / `@gatewaystack/proxyabl`
 
-**Execution Control & Identity-Aware Routing.** Five auth modes (API key, forward bearer, service OAuth, user OAuth, none), SSRF protection (host allowlist, private IP blocking), HTTP proxy with timeout/redirect/size controls, multi-provider registry. Express middleware serves PRM/OIDC metadata, enforces scope-to-tool mappings, and injects verified identity into downstream headers.
+**Execution Control & Identity-Aware Routing.** Five auth modes (API key, forward bearer, service OAuth, user OAuth, none) and a multi-provider registry.
+
+**`proxyabl-core` — SSRF-safe fetch primitive.** `assertUrlSafe` / `executeProxyRequest` provide host-allowlisting, DNS-resolving private-IP blocking (IPv4 + IPv6, incl. IPv4-mapped IPv6), protocol enforcement, redirect blocking (`redirect: "manual"`), and timeout/response-size caps. Use these directly when you proxy **arbitrary, caller-influenced URLs** — that is the case SSRF protection is for.
+
+**`proxyabl` — Express gateway router.** Forwards to an operator-**configured** backend (`functionsBase` / proxy target). The caller controls the tool name / path, not the host: the router sanitizes the tool name, enforces a path allowlist, and pins the resolved URL's host + protocol to the configured backend. It is a pass-through proxy and **does not currently route through `proxyabl-core`'s `assertUrlSafe` engine** — the two have different threat models (a configured backend may legitimately be an internal address, which the private-IP-blocking engine would reject). The Express middleware also serves PRM/OIDC metadata, enforces scope-to-tool mappings, and injects verified identity into downstream headers.
+
+> Converging these — one canonical `proxyabl-core` engine consumed by both the OSS router and the production gateway (which forked an equivalent) — is tracked in the proxyabl convergence work. Until then, treat `assertUrlSafe` / `executeProxyRequest` as an available primitive, not something the bundled router runs for you.
 
 ## explicabl
 
