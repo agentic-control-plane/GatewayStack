@@ -100,10 +100,10 @@ packages/<name>/
 - supertest for Express middleware integration tests
 
 ### current status
-Tests are not yet implemented across packages. Priority order for adding tests:
-1. proxyabl-core (security-critical: SSRF, auth modes, proxy execution)
-2. transformabl-core (correctness-critical: PII regex patterns)
-3. validatabl-core (security-critical: policy enforcement)
-4. identifiabl-core (security-critical: JWT verification)
-5. limitabl-core (correctness-critical: rate limiting, budget tracking)
-6. request-context, explicabl, middleware wrappers
+Every `-core` package and the middleware wrappers have vitest suites under
+`packages/<name>/__tests__/` (note: `__tests__/`, not `tests/`). `npm test` at
+the repo root runs the whole suite; `npm run build` must pass first (the tests
+import built workspace packages). Security-critical coverage is real:
+proxyabl-core SSRF, transformabl-core PII regex + redaction, validatabl-core
+policy enforcement, identifiabl-core JWT verification, limitabl-core
+rate/budget/agent-guard.
