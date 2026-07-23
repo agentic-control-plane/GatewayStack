@@ -38,6 +38,16 @@ Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolpl
 pip install hermes-acp && hermes plugins enable acp
 ```
 
+**Prefer to see the guarantees work first — zero config, no IdP, no backend?**
+
+```bash
+git clone https://github.com/agentic-control-plane/GatewayStack
+cd GatewayStack/examples/quickstart && npm install && npm start
+```
+
+Prints three real decisions — a deny-by-default policy, PII redaction, and a
+rate limit — as pure local library code ([`examples/quickstart`](examples/quickstart)).
+
 Your own framework code — drop in a package:
 
 ```bash
