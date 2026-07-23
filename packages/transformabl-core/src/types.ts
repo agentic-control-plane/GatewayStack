@@ -2,12 +2,26 @@
 
 /** Categories of PII that can be detected. */
 export type PiiType =
+  // Universal
   | "email"
   | "phone"
   | "ssn"
   | "credit_card"
   | "ip_address"
-  | "date_of_birth";
+  | "date_of_birth"
+  // US identifiers (Presidio parity)
+  | "us_bank_number"
+  | "us_itin"
+  | "us_passport"
+  | "us_drivers_license"
+  // International banking
+  | "iban"
+  // Healthcare (HIPAA PHI)
+  | "icd_10"
+  | "icd_9"
+  | "npi"
+  // Financial
+  | "crypto_wallet";
 
 /** A single PII detection match. */
 export interface PiiMatch {
@@ -88,6 +102,13 @@ export interface TransformResult {
   metadata: ContentMetadata;
   /** Whether any transformation was applied. */
   transformed: boolean;
+  /**
+   * True when the input exceeded the PII scan cap (512 KB of invisible-
+   * stripped text) and content past the cap was NOT scanned for PII. A
+   * consumer must surface this rather than treat the result as a clean pass —
+   * fail-open must be loud (M2 / #40).
+   */
+  scanTruncated: boolean;
 }
 
 /** Configuration for the full transformation pipeline. */

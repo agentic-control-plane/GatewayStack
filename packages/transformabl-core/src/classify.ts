@@ -58,6 +58,15 @@ const PII_TO_REGULATORY: Record<string, RegulatoryCategory[]> = {
   phone: ["gdpr"],
   date_of_birth: ["gdpr", "coppa", "hipaa"],
   ip_address: ["gdpr"],
+  us_bank_number: ["pci", "gdpr"],
+  us_itin: ["pci", "gdpr"],
+  us_passport: ["gdpr"],
+  us_drivers_license: ["gdpr"],
+  iban: ["pci", "gdpr"],
+  icd_10: ["hipaa"],
+  icd_9: ["hipaa"],
+  npi: ["hipaa"],
+  crypto_wallet: ["gdpr"],
 };
 
 /**

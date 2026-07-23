@@ -145,6 +145,162 @@ describe("detectPii", () => {
     });
   });
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Presidio-parity recognizers (v0.4.0)
+  // ─────────────────────────────────────────────────────────────────────
+
+  describe("us_bank_number", () => {
+    it("detects 10-digit bank account", () => {
+      const matches = detectPii("account 9845302145 for deposit");
+      expect(matches.some((m) => m.type === "us_bank_number")).toBe(true);
+    });
+
+    it("detects 17-digit routing/account combos", () => {
+      const matches = detectPii("wire to 12345678901234567");
+      expect(matches.some((m) => m.type === "us_bank_number")).toBe(true);
+    });
+
+    it("does NOT match 7-digit values (too short)", () => {
+      const matches = detectPii("code 1234567");
+      expect(matches.some((m) => m.type === "us_bank_number")).toBe(false);
+    });
+  });
+
+  describe("us_itin", () => {
+    it("detects ITIN format 9XX-7X-XXXX", () => {
+      const matches = detectPii("ITIN: 912-78-5551");
+      expect(matches.some((m) => m.type === "us_itin")).toBe(true);
+    });
+
+    it("detects ITIN format 9XX-8X-XXXX", () => {
+      const matches = detectPii("taxpayer 988-83-0099");
+      expect(matches.some((m) => m.type === "us_itin")).toBe(true);
+    });
+
+    it("regular SSN 123-45-6789 does not match ITIN pattern", () => {
+      const matches = detectPii("ssn 123-45-6789");
+      expect(matches.some((m) => m.type === "us_itin")).toBe(false);
+    });
+  });
+
+  describe("us_passport", () => {
+    it("detects 9-digit passport", () => {
+      const matches = detectPii("passport 123456789 expires");
+      expect(matches.some((m) => m.type === "us_passport")).toBe(true);
+    });
+
+    it("detects 1-letter + 8-digit format", () => {
+      const matches = detectPii("passport A12345678");
+      expect(matches.some((m) => m.type === "us_passport")).toBe(true);
+    });
+  });
+
+  describe("us_drivers_license", () => {
+    it("detects 1-letter + 7-digit DL", () => {
+      const matches = detectPii("DL D1234567 state CA");
+      expect(matches.some((m) => m.type === "us_drivers_license")).toBe(true);
+    });
+
+    it("detects DL: prefix form", () => {
+      const matches = detectPii("license DL:12345678");
+      expect(matches.some((m) => m.type === "us_drivers_license")).toBe(true);
+    });
+  });
+
+  describe("iban", () => {
+    it("detects German IBAN", () => {
+      const matches = detectPii("wire to DE89370400440532013000");
+      expect(matches.some((m) => m.type === "iban")).toBe(true);
+    });
+
+    it("detects UK IBAN", () => {
+      const matches = detectPii("acct GB82WEST12345698765432");
+      expect(matches.some((m) => m.type === "iban")).toBe(true);
+    });
+
+    it("does NOT match arbitrary long alphanum", () => {
+      const matches = detectPii("token ABCDEFGHIJKLMNOP12345");
+      expect(matches.some((m) => m.type === "iban")).toBe(false);
+    });
+  });
+
+  describe("phone (international)", () => {
+    it("detects +44 UK number", () => {
+      const matches = detectPii("call +44 20 7946 0958");
+      expect(matches.some((m) => m.type === "phone")).toBe(true);
+    });
+
+    it("detects +81 Japan number", () => {
+      const matches = detectPii("support +81-3-1234-5678");
+      expect(matches.some((m) => m.type === "phone")).toBe(true);
+    });
+  });
+
+  describe("ip_address (IPv6)", () => {
+    it("detects full-form IPv6", () => {
+      const matches = detectPii("addr 2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+      expect(matches.some((m) => m.type === "ip_address")).toBe(true);
+    });
+
+    it("detects compressed IPv6", () => {
+      const matches = detectPii("addr 2001:db8::8a2e:370:7334");
+      expect(matches.some((m) => m.type === "ip_address")).toBe(true);
+    });
+  });
+
+  describe("icd_10", () => {
+    it("detects F32.9 (major depressive disorder)", () => {
+      const matches = detectPii("diagnosis code F32.9 confirmed");
+      expect(matches.some((m) => m.type === "icd_10")).toBe(true);
+    });
+
+    it("detects E11.65 (type 2 diabetes)", () => {
+      const matches = detectPii("pt has E11.65 on chart");
+      expect(matches.some((m) => m.type === "icd_10")).toBe(true);
+    });
+
+    it("detects code without decimals", () => {
+      const matches = detectPii("dx: Z00 routine");
+      expect(matches.some((m) => m.type === "icd_10")).toBe(true);
+    });
+  });
+
+  describe("icd_9", () => {
+    it("detects numeric ICD-9 with decimal", () => {
+      const matches = detectPii("legacy code 250.01 on record");
+      expect(matches.some((m) => m.type === "icd_9")).toBe(true);
+    });
+
+    it("detects V-code", () => {
+      const matches = detectPii("status V70.0");
+      expect(matches.some((m) => m.type === "icd_9")).toBe(true);
+    });
+  });
+
+  describe("npi", () => {
+    it("detects 10-digit NPI starting with 1", () => {
+      const matches = detectPii("provider NPI 1234567893 treating");
+      expect(matches.some((m) => m.type === "npi")).toBe(true);
+    });
+  });
+
+  describe("crypto_wallet", () => {
+    it("detects BTC legacy address", () => {
+      const matches = detectPii("send to 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2");
+      expect(matches.some((m) => m.type === "crypto_wallet")).toBe(true);
+    });
+
+    it("detects BTC bech32 address", () => {
+      const matches = detectPii("payout bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4");
+      expect(matches.some((m) => m.type === "crypto_wallet")).toBe(true);
+    });
+
+    it("detects ETH address", () => {
+      const matches = detectPii("eth 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7");
+      expect(matches.some((m) => m.type === "crypto_wallet")).toBe(true);
+    });
+  });
+
   describe("zero-width character bypass", () => {
     it("detects email with zero-width space inside", () => {
       const text = "contact john\u200B@example.com for info";
