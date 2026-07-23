@@ -2,5 +2,8 @@
   "name": "@gatewaystack/observability-core",
   "version": "0.0.1",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  }
 }

@@ -22,12 +22,15 @@
     "express": "^4.22.0",
     "express-rate-limit": "^8.2.2",
     "@gatewaystack/proxyabl-core": "^0.1.1",
-    "@gatewaystack/request-context": "0.0.6"
+    "@gatewaystack/request-context": "^0.0.6"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "jose": "^6.1.0",
     "typescript": "^5.6.3",
     "tsx": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
