@@ -127,13 +127,56 @@ const BUILTIN_PATTERNS: PiiPattern[] = [
 ];
 
 /**
+ * Defense-in-depth against pathological inputs: cap the length we scan.
+ * Even with bounded patterns, running every pattern over an unbounded body
+ * is a DoS lever (this is an agent/LLM gateway — large tool-call payloads
+ * are normal). PII beyond this cap is not scanned; callers handling very
+ * large bodies should chunk. 512 KB comfortably covers real tool I/O.
+ */
+export const MAX_PII_SCAN_LENGTH = 512 * 1024;
+
+/** Result of a PII scan, including whether the scan cap truncated the input. */
+export interface DetectionResult {
+  /** All matches found, in original-text coordinates, sorted by start. */
+  matches: PiiMatch[];
+  /**
+   * True when the (invisible-stripped) input was longer than
+   * {@link MAX_PII_SCAN_LENGTH} and PII past the cap was NOT scanned. When
+   * true, absence of matches beyond the cap is not evidence of absence — the
+   * caller must treat this as a loud fail-open signal, not silently pass the
+   * unscanned tail through as clean.
+   */
+  scanTruncated: boolean;
+  /** Number of characters actually scanned. */
+  scannedLength: number;
+  /** Full length of the invisible-stripped input. */
+  totalLength: number;
+}
+
+/**
  * Detect PII in text content.
  * Returns all matches with their positions.
+ *
+ * Back-compatible thin wrapper over {@link detectPiiDetailed}. Callers that
+ * need to know whether the scan cap truncated the input (M2 / #40) should use
+ * {@link detectPiiDetailed} and inspect `scanTruncated`.
  */
 export function detectPii(
   text: string,
   customPatterns?: Array<{ type: string; pattern: RegExp }>
 ): PiiMatch[] {
+  return detectPiiDetailed(text, customPatterns).matches;
+}
+
+/**
+ * Detect PII and report scan-cap truncation.
+ * Returns matches plus a `scanTruncated` flag so a truncated scan is never a
+ * silent fail-open.
+ */
+export function detectPiiDetailed(
+  text: string,
+  customPatterns?: Array<{ type: string; pattern: RegExp }>
+): DetectionResult {
   // Strip zero-width / invisible characters before scanning so an attacker
   // cannot defeat the regex by inserting them inside PII values (e.g.
   // `john\u200B@example.com`). Matches found in the stripped form are
@@ -141,14 +184,10 @@ export function detectPii(
   // obfuscated span — including the invisible chars themselves.
   const { text: scanText, map } = stripInvisible(text);
 
-  // Defense-in-depth against pathological inputs: cap the length we scan.
-  // Even with bounded patterns, running every pattern over an unbounded body
-  // is a DoS lever (this is an agent/LLM gateway — large tool-call payloads
-  // are normal). PII beyond this cap is not scanned; callers handling very
-  // large bodies should chunk. 512 KB comfortably covers real tool I/O.
-  const MAX_SCAN_LENGTH = 512 * 1024;
-  const boundedScanText =
-    scanText.length > MAX_SCAN_LENGTH ? scanText.slice(0, MAX_SCAN_LENGTH) : scanText;
+  const scanTruncated = scanText.length > MAX_PII_SCAN_LENGTH;
+  const boundedScanText = scanTruncated
+    ? scanText.slice(0, MAX_PII_SCAN_LENGTH)
+    : scanText;
 
   const matches: PiiMatch[] = [];
   const allPatterns: Array<{ type: string; pattern: RegExp }> = [
@@ -187,5 +226,11 @@ export function detectPii(
 
   // Sort by position
   matches.sort((a, b) => a.start - b.start);
-  return matches;
+
+  return {
+    matches,
+    scanTruncated,
+    scannedLength: boundedScanText.length,
+    totalLength: scanText.length,
+  };
 }

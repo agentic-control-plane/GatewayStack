@@ -80,6 +80,8 @@ export function transformabl(config?: TransformablMiddlewareConfig): RequestHand
 export {
   transformContent,
   detectPii,
+  detectPiiDetailed,
+  MAX_PII_SCAN_LENGTH,
   redactPii,
   classifyContent,
   extractMetadata,
