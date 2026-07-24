@@ -24,6 +24,7 @@ interface WorkflowState {
 export class AgentGuard {
   private workflows = new Map<string, WorkflowState>();
   private config: Required<AgentGuardConfig>;
+  private lastSweepAt = Date.now();
 
   constructor(config: AgentGuardConfig = {}) {
     this.config = {
@@ -31,6 +32,28 @@ export class AgentGuard {
       maxWorkflowCost: config.maxWorkflowCost ?? DEFAULT_MAX_WORKFLOW_COST,
       maxDurationMs: config.maxDurationMs ?? DEFAULT_MAX_DURATION_MS,
     };
+  }
+
+  /**
+   * Evict workflow state older than maxDurationMs. Such workflows are already
+   * denied by the duration check, so their state is pure dead weight — without
+   * this, a client rotating workflow ids grows the Map without bound (a memory
+   * DoS). Runs lazily (at most once per maxDurationMs) off the normal call
+   * path, so there is no timer to leak or to keep the process alive.
+   */
+  private sweepExpired(now: number): void {
+    if (now - this.lastSweepAt < this.config.maxDurationMs) return;
+    this.lastSweepAt = now;
+    for (const [id, state] of this.workflows) {
+      if (now - state.startedAt > this.config.maxDurationMs) {
+        this.workflows.delete(id);
+      }
+    }
+  }
+
+  /** Number of workflows currently tracked (exposed for tests/observability). */
+  get size(): number {
+    return this.workflows.size;
   }
 
   /**
@@ -97,6 +120,7 @@ export class AgentGuard {
   }
 
   private getOrCreate(workflowId: string): WorkflowState {
+    this.sweepExpired(Date.now());
     let state = this.workflows.get(workflowId);
     if (!state) {
       state = { startedAt: Date.now(), toolCallCount: 0, totalCost: 0 };

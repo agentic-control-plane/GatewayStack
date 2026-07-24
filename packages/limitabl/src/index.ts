@@ -22,14 +22,20 @@ export interface LimitablConfig extends LimitablCoreConfig {
   extractWorkflowId?: (req: any) => string | undefined;
 }
 
-// Singleton engine per config (middleware is typically created once at startup)
-let _engine: LimitablEngine | null = null;
-
-function getEngine(config: LimitablCoreConfig): LimitablEngine {
-  if (!_engine) {
-    _engine = new LimitablEngine(config);
-  }
-  return _engine;
+/**
+ * Namespace a client-supplied workflow id under the request's server-resolved
+ * principal, so the agent-guard key is not purely client-controlled. Without
+ * this, a client rotates `x-workflow-id` to reset its own runaway counters and
+ * can collide with another principal's workflow. Binding to sub/tenant/ip means
+ * a rotated id is still scoped to the same principal. Returns undefined when
+ * there is no workflow id (the core then denies if a guard is configured).
+ */
+function workflowKeyFor(req: Request, clientWorkflowId: string | undefined): string | undefined {
+  if (!clientWorkflowId) return undefined;
+  const user = (req as any).user;
+  const principal =
+    user?.sub ?? (req as any).tenantId ?? user?.org_id ?? (req.ip as string) ?? "anon";
+  return `${principal}::${clientWorkflowId}`;
 }
 
 function keyFromReq(req: Request): LimitKey {
@@ -65,13 +71,19 @@ function keyFromReq(req: Request): LimitKey {
  * Attach to routes AFTER identifiabl (needs req.user).
  */
 export function limitabl(config: LimitablConfig): RequestHandler {
-  const engine = getEngine(config);
+  // One engine per middleware instance. A module-level singleton (the old
+  // behavior) meant a second `limitabl(stricterConfig)` mount silently reused
+  // the first mount's engine and config — a stricter later mount enforced the
+  // laxer earlier limits. Building the engine here keeps each mount's limits
+  // (and in-memory counters) its own.
+  const engine = new LimitablEngine(config);
 
   return (req: any, res, next) => {
     const key = keyFromReq(req);
-    const workflowId = config.extractWorkflowId
+    const clientWorkflowId = config.extractWorkflowId
       ? config.extractWorkflowId(req)
       : req.header?.("x-workflow-id") ?? undefined;
+    const workflowId = workflowKeyFor(req, clientWorkflowId);
 
     const result = engine.preflight(key, { workflowId });
 
