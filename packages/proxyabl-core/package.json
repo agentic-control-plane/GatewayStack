@@ -1,6 +1,6 @@
 {
   "name": "@gatewaystack/proxyabl-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,13 @@
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build"
   },
+  "dependencies": {
+    "jose": "^6.1.0"
+  },
   "devDependencies": {
     "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

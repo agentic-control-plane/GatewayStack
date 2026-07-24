@@ -8,12 +8,6 @@
   </a>
   <img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Cloud%20Run-ready-4285F4" alt="Cloud Run" />
-  <a href="https://github.com/agentic-control-plane/GatewayStack/tree/main/docs/conformance.json">
-    <img
-      src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fagentic-control-plane%2FGatewayStack%2Fmain%2Fdocs%2Fconformance.json&query=$.version&label=MCP%2FAuth%20Conformance"
-      alt="MCP Auth Conformance"
-    />
-  </a>
 </p>
 
 <p align="center"><strong>See, price, and control every tool call your AI agents make.</strong></p>
@@ -43,6 +37,16 @@ Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolpl
 ```bash
 pip install hermes-acp && hermes plugins enable acp
 ```
+
+**Prefer to see the guarantees work first — zero config, no IdP, no backend?**
+
+```bash
+git clone https://github.com/agentic-control-plane/GatewayStack
+cd GatewayStack/examples/quickstart && npm install && npm start
+```
+
+Prints three real decisions — a deny-by-default policy, PII redaction, and a
+rate limit — as pure local library code ([`examples/quickstart`](examples/quickstart)).
 
 Your own framework code — drop in a package:
 
@@ -88,8 +92,10 @@ Each layer ships as a framework-agnostic `-core` package plus an Express middlew
 | `@gatewaystack/transformabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/transformabl)](https://www.npmjs.com/package/@gatewaystack/transformabl) | PII detection, redaction, safety classification |
 | `@gatewaystack/validatabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/validatabl)](https://www.npmjs.com/package/@gatewaystack/validatabl) | Deny-by-default policy engine, scope/permission enforcement |
 | `@gatewaystack/limitabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/limitabl)](https://www.npmjs.com/package/@gatewaystack/limitabl) | Rate limits, budget tracking, agent guard |
-| `@gatewaystack/proxyabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/proxyabl)](https://www.npmjs.com/package/@gatewaystack/proxyabl) | Auth mode routing, SSRF protection, identity-aware proxy |
+| `@gatewaystack/proxyabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/proxyabl)](https://www.npmjs.com/package/@gatewaystack/proxyabl) | Auth-mode routing, identity-aware proxy to a configured backend (path-allowlisted). SSRF-safe fetch for arbitrary URLs is a `proxyabl-core` primitive — see note below. |
 | `@gatewaystack/explicabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/explicabl)](https://www.npmjs.com/package/@gatewaystack/explicabl) | Structured audit logging, health endpoints |
+
+> **SSRF note (proxyabl).** The `proxyabl` Express router forwards to an operator-**configured** backend, with tool-name sanitization, path allowlisting, and host/protocol pinning to that backend — the target host is not caller-controlled. The DNS-resolving, private-IP-blocking SSRF engine (`assertUrlSafe` / `executeProxyRequest`) lives in `@gatewaystack/proxyabl-core` and is the primitive to use when you proxy **arbitrary, caller-influenced URLs**; the bundled router does not currently route through it (its threat model is different — a configured backend may legitimately be internal). See [`docs/packages.md`](docs/packages.md#proxyabl).
 
 ## Full stack example
 
@@ -175,7 +181,7 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 | `demos/` | MCP issuer + ChatGPT Apps SDK connectors that mint demo JWTs |
 | `tools/` | Echo server, mock tool backend, Cloud Run deploy helper |
 | `tests/` | Vitest smoke tests |
-| `docs/` | Auth0 walkthroughs, conformance output, endpoint references, troubleshooting |
+| `docs/` | Auth0 walkthroughs, endpoint references, troubleshooting |
 
 ## Testing
 

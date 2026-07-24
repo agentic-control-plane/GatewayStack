@@ -98,6 +98,8 @@ resolveAuth(config: AuthModeConfig, context: AuthContext): ResolvedAuth
 
 ### SSRF Protection
 
+> **Scope.** `assertUrlSafe` / `executeProxyRequest` are the primitive for proxying **arbitrary, caller-influenced URLs** — call them directly from your handler. The Express router in [`@gatewaystack/proxyabl`](https://www.npmjs.com/package/@gatewaystack/proxyabl) is a different thing: it forwards to an operator-**configured** backend and does not route through this engine (a configured backend may legitimately be internal, which private-IP blocking would reject). Importing the router does not give you this SSRF check automatically.
+
 ```ts
 assertUrlSafe(opts: UrlSafetyOptions): Promise<void>
 ```

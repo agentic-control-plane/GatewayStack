@@ -1,6 +1,6 @@
 {
   "name": "@gatewaystack/transformabl-core",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

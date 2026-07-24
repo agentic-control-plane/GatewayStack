@@ -37,8 +37,10 @@ const INVISIBLE_CHAR_RE = /[\u200B-\u200D\u2060\uFEFF]/;
 // Defensive upper bound on the normalization pass. Callers should enforce
 // their own payload-size limits upstream; this cap exists so an oversized
 // input cannot itself turn the O(n) character walk into a DoS vector.
-// PII detection still runs on the full original input — the oversized-
-// input path just skips ZW-normalization rather than iterating.
+// Over this length ZW-normalization is skipped (the input is returned
+// unchanged). Note the detection scan has its own, smaller cap
+// (MAX_PII_SCAN_LENGTH, 512 KB) past which PII is not scanned — detectPii
+// truncates and detectPiiDetailed reports it via `scanTruncated`.
 const MAX_NORMALIZE_LENGTH = 1_000_000;
 
 export function stripInvisible(input: string): StrippedText {

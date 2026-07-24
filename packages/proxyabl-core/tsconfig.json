@@ -8,7 +8,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "types": ["node"],
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "tsconfig.tsbuildinfo"
   },
   "include": ["src"]
 }

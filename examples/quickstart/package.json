@@ -1,0 +1,17 @@
+{
+  "name": "gatewaystack-quickstart",
+  "private": true,
+  "type": "module",
+  "description": "30-second, zero-config GatewayStack governance demo",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@gatewaystack/validatabl-core": "^0.1.0",
+    "@gatewaystack/transformabl-core": "^0.4.0",
+    "@gatewaystack/limitabl-core": "^0.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
