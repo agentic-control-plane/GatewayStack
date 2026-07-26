@@ -7,7 +7,13 @@ export function createProxyablMiddleware(config: ProxyablConfig) {
     try {
       const identity = await verifyBearerFromRequest(config, req);
 
-      const tool = req.path.split("/").pop();
+      // Derive the tool name from the last NON-EMPTY path segment. Using
+      // `.split("/").pop()` alone returns "" for a trailing slash (and other
+      // empty segments from "//"), which previously skipped the scope check
+      // entirely — a request to `/proxy/deploy/` would bypass the scopes
+      // configured for `deploy`. Filtering empties makes the check
+      // trailing-slash- and double-slash-invariant.
+      const tool = req.path.split("/").filter(Boolean).pop();
       if (tool) {
         ensureToolScopesForRequest(config, tool, identity.scopes);
       }
