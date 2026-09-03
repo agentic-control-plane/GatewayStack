@@ -195,7 +195,7 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 npm test
 ```
 
-185 tests across 17 test files covering all six core packages.
+228 tests across 24 test files covering all six core packages.
 
 ## Prerequisites
 
