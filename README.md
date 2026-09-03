@@ -41,7 +41,7 @@ First controlled call in about thirty seconds. The script documents [what it doe
 Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolplane.com/integrations/hermes)):
 
 ```bash
-pip install hermes-acp && hermes plugins enable acp
+pip install acp-hermes && hermes plugins enable acp
 ```
 
 **Prefer to see the guarantees work first — zero config, no IdP, no backend?**
