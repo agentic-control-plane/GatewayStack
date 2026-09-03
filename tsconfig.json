@@ -19,7 +19,6 @@
     { "path": "packages/proxyabl-core" },
     { "path": "packages/proxyabl" },
 
-    { "path": "packages/explicabl-core" },
     { "path": "packages/explicabl" },
 
     { "path": "packages/request-context" },
@@ -42,7 +41,6 @@
     "@gatewaystack/validatabl": ["packages/validatabl"],
     "@gatewaystack/limitabl-core": ["packages/limitabl-core"],
     "@gatewaystack/limitabl": ["packages/limitabl"],
-    "@gatewaystack/explicabl-core": ["packages/explicabl-core"],
     "@gatewaystack/explicabl": ["packages/explicabl"],
     "@gatewaystack/request-context": ["packages/request-context"],
     "@gatewaystack/integrations": ["packages/integrations"],

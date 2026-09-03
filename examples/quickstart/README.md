@@ -18,7 +18,7 @@ You'll see:
 2 · PII redaction (transformabl)
   in : Email me at john@acme.com or call about SSN 123-45-6789.
   out: Email me at [EMAIL] or call about SSN [SSN].
-  detected: email, ssn
+  detected: email, ssn, icd_9
 
 3 · Rate limit + budget guard (limitabl)
   call 1: ✅ ALLOW

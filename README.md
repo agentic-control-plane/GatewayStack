@@ -24,18 +24,24 @@ GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://ag
 
 ## Install
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/agentic-control-plane/acp-install/main/demo/acp-local-demo.gif" alt="Real terminal recording: install.sh --local installs with no signup; a coding agent's force-push to main is blocked by the safety floor, a network call has to ask, normal work runs and is logged; Codex hits the same floor; tail ~/.acp/audit.jsonl shows every call and its decision." width="860" />
+</p>
+
 Coding agents (Claude Code, Cursor, Codex, OpenClaw) — one command, no code changes:
 
 ```bash
 curl -sf https://agenticcontrolplane.com/install.sh | bash
 ```
 
+Add `--local` to run on-device with no account.
+
 First controlled call in about thirty seconds. The script documents [what it does and won't do](https://github.com/agentic-control-plane/acp-install).
 
 Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolplane.com/integrations/hermes)):
 
 ```bash
-pip install hermes-acp && hermes plugins enable acp
+pip install acp-hermes && hermes plugins enable acp
 ```
 
 **Prefer to see the guarantees work first — zero config, no IdP, no backend?**
@@ -189,7 +195,7 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 npm test
 ```
 
-185 tests across 17 test files covering all six core packages.
+228 tests across 24 test files covering all six core packages.
 
 ## Prerequisites
 

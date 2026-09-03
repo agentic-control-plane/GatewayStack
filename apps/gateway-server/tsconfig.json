@@ -25,7 +25,6 @@
     { "path": "../../packages/limitabl" },
     { "path": "../../packages/proxyabl-core" },
     { "path": "../../packages/proxyabl" },
-    { "path": "../../packages/explicabl-core" },
-    { "path": "../../packages/explicabl" },
+    { "path": "../../packages/explicabl" }
   ]
 }
