@@ -24,11 +24,17 @@ GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://ag
 
 ## Install
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/agentic-control-plane/acp-install/main/demo/acp-local-demo.gif" alt="Real terminal recording: install.sh --local installs with no signup; a coding agent's force-push to main is blocked by the safety floor, a network call has to ask, normal work runs and is logged; Codex hits the same floor; tail ~/.acp/audit.jsonl shows every call and its decision." width="860" />
+</p>
+
 Coding agents (Claude Code, Cursor, Codex, OpenClaw) — one command, no code changes:
 
 ```bash
 curl -sf https://agenticcontrolplane.com/install.sh | bash
 ```
+
+Add `--local` to run on-device with no account.
 
 First controlled call in about thirty seconds. The script documents [what it does and won't do](https://github.com/agentic-control-plane/acp-install).
 
