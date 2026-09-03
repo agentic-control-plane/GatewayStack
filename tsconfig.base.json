@@ -29,7 +29,6 @@
           "@gatewaystack/proxyabl-core": ["packages/proxyabl-core/dist"],
           "@gatewaystack/proxyabl": ["packages/proxyabl/dist"],
 
-          "@gatewaystack/explicabl-core": ["packages/explicabl-core/dist"],
           "@gatewaystack/explicabl": ["packages/explicabl/dist"],
 
           "@gatewaystack/request-context": ["packages/request-context/src/index.ts"],
