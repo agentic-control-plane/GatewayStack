@@ -7,7 +7,6 @@
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" />
   </a>
   <img src="https://img.shields.io/badge/TypeScript-5.x-blue" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Cloud%20Run-ready-4285F4" alt="Cloud Run" />
 </p>
 
 <p align="center"><strong>See, price, and control every tool call your AI agents make.</strong></p>
@@ -16,19 +15,19 @@
   <a href="https://agenticcontrolplane.com">agenticcontrolplane.com</a> · <a href="https://agenticcontrolplane.com/data">the data</a> · <a href="https://github.com/agentic-control-plane/acp-install">one-command install</a>
 </p>
 
-GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://agenticcontrolplane.com). It runs in your infrastructure, in the agent's runtime call path, and makes every tool and model call identified, policy-checked, and logged — whatever framework the agent runs on.
+GatewayStack is the MIT-licensed open core of [Agentic Control Plane](https://agenticcontrolplane.com). It runs in your infrastructure, in the agent's runtime call path, and makes every tool and model call identified, policy-checked, and logged, whatever framework the agent runs on.
 
 > **Which one do I want?**
-> **GatewayStack (this repo)** is the runtime: MIT-licensed npm modules — identity, policy, limits, PII redaction, audit — you compose into your own gateway and run yourself. No account, no phone-home.
-> **Agentic Control Plane** is the hosted product built on it: the console, the priced cost X-ray, team policy UI, approvals — [free for individuals](https://cloud.agenticcontrolplane.com). Most people start there and reach for this repo when they want the enforcement layer in their own infra.
+> **GatewayStack (this repo)** is the runtime: MIT-licensed npm modules (identity, policy, limits, PII redaction, audit) you compose into your own gateway and run yourself. No account needed.
+> **Agentic Control Plane** is the hosted product built on it: the console, the priced cost X-ray, team policy UI, approvals. It is [free up to 5 agents](https://cloud.agenticcontrolplane.com). Most people start there and reach for this repo when they want the enforcement layer in their own infra.
 
 ## Install
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/agentic-control-plane/acp-install/main/demo/acp-local-demo.gif" alt="Real terminal recording: install.sh --local installs with no signup; a coding agent's force-push to main is blocked by the safety floor, a network call has to ask, normal work runs and is logged; Codex hits the same floor; tail ~/.acp/audit.jsonl shows every call and its decision." width="860" />
+  <img src="https://raw.githubusercontent.com/agentic-control-plane/acp-install/main/demo/acp-local-demo.gif" alt="Real terminal recording: install.sh --local installs with no signup; a coding agent's force-push to main is held by the safety floor, a network call has to ask, normal work runs and is logged; Codex hits the same floor; tail ~/.acp/audit.jsonl shows every call and its decision." width="860" />
 </p>
 
-Coding agents (Claude Code, Cursor, Codex, OpenClaw) — one command, no code changes:
+Coding agents (Claude Code, Cursor, Codex, OpenClaw): one command, no code changes:
 
 ```bash
 curl -sf https://agenticcontrolplane.com/install.sh | bash
@@ -44,17 +43,17 @@ Hermes Agent uses a native Python plugin instead ([why](https://agenticcontrolpl
 pip install acp-hermes && hermes plugins enable acp
 ```
 
-**Prefer to see the guarantees work first — zero config, no IdP, no backend?**
+**Prefer to see it work first, with zero config, no IdP and no backend?**
 
 ```bash
 git clone https://github.com/agentic-control-plane/GatewayStack
 cd GatewayStack/examples/quickstart && npm install && npm start
 ```
 
-Prints three real decisions — a deny-by-default policy, PII redaction, and a
-rate limit — as pure local library code ([`examples/quickstart`](examples/quickstart)).
+Prints three real decisions (a deny-by-default policy, PII redaction, and a
+rate limit) as pure local library code ([`examples/quickstart`](examples/quickstart)).
 
-Your own framework code — drop in a package:
+Your own framework code: drop in a package:
 
 ```bash
 npm install @gatewaystack/identifiabl express
@@ -82,11 +81,11 @@ Every request now requires a valid RS256 JWT. `req.user` is the verified identit
 
 ## What you get
 
-- **Cost control.** Budget caps and rate limits enforced per call (`limitabl`), with every call's usage logged and attributable. The priced cost X-ray — runs split into the orchestration loop vs leaf sub-tasks, per-model spend — is the [hosted console](https://agenticcontrolplane.com/cost-tracking) built on this telemetry.
-- **Tool-surface control.** Allow / ask / redact / deny, per operation, scoped by agent, role, or user. Deny-by-default on the destructive stuff. Enforced at the call, outside the model — a prompt-injected agent can't talk its way past it.
+- **Cost control.** Budget caps and rate limits enforced per call (`limitabl`), with every call's usage logged and attributable. The priced cost X-ray (runs split into the orchestration loop vs leaf sub-tasks, per-model spend) is the [hosted console](https://agenticcontrolplane.com/cost-tracking) built on this telemetry.
+- **Tool-surface control.** Allow / ask / redact / deny, per operation, scoped by agent, role, or user. The check runs in a hook outside the model, so a prompt can't talk the agent past it. It doesn't run if hooks are switched off.
 - **Audit.** Every tool and model call logged: who triggered it, which agent, what it returned, what it cost, how long it took. Attributable and exportable.
 
-Every number we publish is metered from our own production workspaces, not estimated: [agenticcontrolplane.com/data](https://agenticcontrolplane.com/data).
+The numbers on the data page come from our own production workspaces: [agenticcontrolplane.com/data](https://agenticcontrolplane.com/data).
 
 ## Modules
 
@@ -98,14 +97,14 @@ Each layer ships as a framework-agnostic `-core` package plus an Express middlew
 | `@gatewaystack/transformabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/transformabl)](https://www.npmjs.com/package/@gatewaystack/transformabl) | PII detection, redaction, safety classification |
 | `@gatewaystack/validatabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/validatabl)](https://www.npmjs.com/package/@gatewaystack/validatabl) | Deny-by-default policy engine, scope/permission enforcement |
 | `@gatewaystack/limitabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/limitabl)](https://www.npmjs.com/package/@gatewaystack/limitabl) | Rate limits, budget tracking, agent guard |
-| `@gatewaystack/proxyabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/proxyabl)](https://www.npmjs.com/package/@gatewaystack/proxyabl) | Auth-mode routing, identity-aware proxy to a configured backend (path-allowlisted). SSRF-safe fetch for arbitrary URLs is a `proxyabl-core` primitive — see note below. |
+| `@gatewaystack/proxyabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/proxyabl)](https://www.npmjs.com/package/@gatewaystack/proxyabl) | Auth-mode routing, identity-aware proxy to a configured backend (path-allowlisted). SSRF-safe fetch for arbitrary URLs is a `proxyabl-core` primitive (see note below). |
 | `@gatewaystack/explicabl` | [![npm](https://img.shields.io/npm/v/@gatewaystack/explicabl)](https://www.npmjs.com/package/@gatewaystack/explicabl) | Structured audit logging, health endpoints |
 
-> **SSRF note (proxyabl).** The `proxyabl` Express router forwards to an operator-**configured** backend, with tool-name sanitization, path allowlisting, and host/protocol pinning to that backend — the target host is not caller-controlled. The DNS-resolving, private-IP-blocking SSRF engine (`assertUrlSafe` / `executeProxyRequest`) lives in `@gatewaystack/proxyabl-core` and is the primitive to use when you proxy **arbitrary, caller-influenced URLs**; the bundled router does not currently route through it (its threat model is different — a configured backend may legitimately be internal). See [`docs/packages.md`](docs/packages.md#proxyabl).
+> **SSRF note (proxyabl).** The `proxyabl` Express router forwards to an operator-**configured** backend, with tool-name sanitization, path allowlisting, and host/protocol pinning to that backend, so the target host is not caller-controlled. The DNS-resolving, private-IP-blocking SSRF engine (`assertUrlSafe` / `executeProxyRequest`) lives in `@gatewaystack/proxyabl-core` and is the primitive to use when you proxy **arbitrary, caller-influenced URLs**; the bundled router does not currently route through it (its threat model is different: a configured backend may legitimately be internal). See [`docs/packages.md`](docs/packages.md#proxyabl).
 
 ## Full stack example
 
-Wire all six layers together. Each is optional — use only what you need.
+Wire all six layers together. Each is optional, so use only what you need.
 
 ```bash
 npm install @gatewaystack/identifiabl @gatewaystack/transformabl @gatewaystack/validatabl \
@@ -175,7 +174,7 @@ npm run dev   # gateway on :8080, admin UI on :5173
 
 ## Why this is a separate layer
 
-AI apps have three actors — user, LLM, backend — and no shared identity layer. The backend sees a service token, not a person, so it can't tell who the agent is acting for, whether the action was authorized, or what it cost. GatewayStack closes that gap at the tool-call boundary. [The full argument →](docs/three-party-problem.md)
+AI apps have three actors (user, LLM, backend) and no shared identity layer. The backend sees a service token, not a person, so it can't tell who the agent is acting for, whether the action was authorized, or what it cost. GatewayStack closes that gap at the tool-call boundary. [The full argument →](docs/three-party-problem.md)
 
 ## Repository layout
 
@@ -194,8 +193,6 @@ AI apps have three actors — user, LLM, backend — and no shared identity laye
 ```bash
 npm test
 ```
-
-228 tests across 24 test files covering all six core packages.
 
 ## Prerequisites
 
@@ -216,16 +213,14 @@ npm test
 
 ## Related repos
 
-- [acp-install](https://github.com/agentic-control-plane/acp-install) — the one-command installer for coding agents and MCP clients
-- [acp-governance-sdks](https://github.com/agentic-control-plane/acp-governance-sdks) — TypeScript + Python SDKs for scoped subagents and delegation chains
-- [delegation-chain-spec](https://github.com/agentic-control-plane/delegation-chain-spec) — ADCS, the open spec for agent-to-agent delegation
-- [hermes-acp-plugin](https://github.com/agentic-control-plane/hermes-acp-plugin) — the pip-installed governance plugin for Nous Research's Hermes Agent
-- [agentgovbench](https://github.com/agentic-control-plane/agentgovbench) — 48-scenario benchmark across agent runtimes
+- [acp-install](https://github.com/agentic-control-plane/acp-install): the one-command installer for coding agents and MCP clients
+- [acp-governance-sdks](https://github.com/agentic-control-plane/acp-governance-sdks): TypeScript and Python SDKs for scoped subagents and delegation chains
+- [delegation-chain-spec](https://github.com/agentic-control-plane/delegation-chain-spec): ADCS, the open spec for agent-to-agent delegation
+- [hermes-acp-plugin](https://github.com/agentic-control-plane/hermes-acp-plugin): the pip-installed plugin for Nous Research's Hermes Agent
+- [agentgovbench](https://github.com/agentic-control-plane/agentgovbench): 48-scenario benchmark across agent runtimes
 
 ## Contributing
 
 - Run the tests: `npm test`
 - Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Report issues on [GitHub Issues](https://github.com/agentic-control-plane/GatewayStack/issues)
-
-GatewayStack is the runtime. The hosted console — dashboard, team management, cost X-ray, policy UI — is [Agentic Control Plane](https://agenticcontrolplane.com). Free for individuals.
