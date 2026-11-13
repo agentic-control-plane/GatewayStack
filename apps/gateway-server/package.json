@@ -10,7 +10,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
+    "dotenv": "^18.0.10",
     "express": "^4.22.0",
     "jose": "^6.1.0",
     "node-fetch": "^3.3.2"
