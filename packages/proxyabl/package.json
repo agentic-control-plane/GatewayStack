@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "jose": "^6.1.0",
-    "typescript": "^5.6.3",
+    "typescript": "^7.0.2",
     "tsx": "^4.19.2"
   },
   "engines": {
