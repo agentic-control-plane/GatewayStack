@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "jose": "^6.1.0"
+    "jose": "^6.2.18"
   },
   "engines": {
     "node": ">=18"
